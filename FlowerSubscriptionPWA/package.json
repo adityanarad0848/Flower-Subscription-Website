@@ -1,0 +1,7 @@
+{
+  "name": "flower-subscription-pwa",
+  "version": "1.0.0",
+  "scripts": {
+    "start": "npx serve -s . -p 3000"
+  }
+}

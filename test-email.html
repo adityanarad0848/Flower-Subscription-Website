@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Test EmailJS</title>
+  <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
+</head>
+<body>
+  <h1>EmailJS Test</h1>
+  <button onclick="testEmail()">Send Test Email</button>
+  <div id="result"></div>
+
+  <script>
+    emailjs.init('1OBvnsJdSCNpFvbRC');
+
+    function testEmail() {
+      document.getElementById('result').innerHTML = 'Sending...';
+      
+      emailjs.send('service_ny8xprl', 'template_k4r2j1s', {
+        to_email: 'naradaditya@gmail.com',
+        from_name: 'Flower Subscription',
+        customer_name: 'Test Customer',
+        customer_email: 'test@example.com',
+        customer_phone: '+91 9876543210',
+        order_items: 'Rose Bouquet x1',
+        total_amount: '500.00',
+        delivery_date: '2024-01-15',
+        address: 'Test Address, Pune, 411014',
+        message: 'Test order confirmation'
+      })
+      .then(function(response) {
+        document.getElementById('result').innerHTML = 'SUCCESS! Check your email.';
+        console.log('SUCCESS!', response);
+      })
+      .catch(function(error) {
+        document.getElementById('result').innerHTML = 'FAILED! ' + error.text;
+        console.log('FAILED...', error);
+      });
+    }
+  </script>
+</body>
+</html>

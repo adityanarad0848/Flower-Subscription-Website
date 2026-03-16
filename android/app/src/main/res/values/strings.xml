@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Evrydayy</string>
+    <string name="title_activity_main">Evrydayy</string>
+    <string name="package_name">com.evrydayy.app</string>
+    <string name="custom_url_scheme">com.evrydayy.app</string>
+</resources>

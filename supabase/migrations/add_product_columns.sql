@@ -1,0 +1,13 @@
+-- Add missing columns to products table
+ALTER TABLE products ADD COLUMN IF NOT EXISTS sale_price DECIMAL(10, 2);
+ALTER TABLE products ADD COLUMN IF NOT EXISTS category TEXT;
+ALTER TABLE products ADD COLUMN IF NOT EXISTS weight TEXT;
+ALTER TABLE products ADD COLUMN IF NOT EXISTS discount INT DEFAULT 0;
+ALTER TABLE products ADD COLUMN IF NOT EXISTS rating DECIMAL(3, 2) DEFAULT 4.5;
+ALTER TABLE products ADD COLUMN IF NOT EXISTS review_count INT DEFAULT 0;
+ALTER TABLE products ADD COLUMN IF NOT EXISTS badge TEXT;
+ALTER TABLE products ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP;
+
+-- Create indexes
+CREATE INDEX IF NOT EXISTS idx_products_category ON products(category);
+CREATE INDEX IF NOT EXISTS idx_products_is_active ON products(is_active);
