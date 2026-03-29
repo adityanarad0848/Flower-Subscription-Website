@@ -3,6 +3,12 @@ apply plugin: 'com.android.application'
 android {
     namespace = "com.flowersubscription.app"
     compileSdk = rootProject.ext.compileSdkVersion
+    
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_21
+        targetCompatibility JavaVersion.VERSION_21
+    }
+    
     defaultConfig {
         applicationId "com.flowersubscription.app"
         minSdkVersion rootProject.ext.minSdkVersion
@@ -28,6 +34,8 @@ repositories {
     flatDir{
         dirs '../capacitor-cordova-android-plugins/src/main/libs', 'libs'
     }
+    maven { url 'https://jitpack.io' }
+    maven { url 'https://maven.payumoney.com/repository/maven-public/' }
 }
 
 dependencies {
@@ -40,6 +48,10 @@ dependencies {
     androidTestImplementation "androidx.test.ext:junit:$androidxJunitVersion"
     androidTestImplementation "androidx.test.espresso:espresso-core:$androidxEspressoCoreVersion"
     implementation project(':capacitor-cordova-android-plugins')
+    
+    // Native-like experience with Chrome Custom Tabs
+    implementation 'com.google.android.material:material:1.9.0'
+    implementation 'androidx.browser:browser:1.8.0'
 }
 
 apply from: 'capacitor.build.gradle'

@@ -6,12 +6,16 @@ import { Badge } from "./ui/badge";
 import { useState, useEffect } from "react";
 import { useCart } from "@/app/context/cart";
 import { ProductDetailDialog } from "./ProductDetailDialog";
+import { SubscriptionDialog } from "./SubscriptionDialog";
 import { supabase } from "../../lib/supabase";
 
 export function Home() {
   const [detailDialogOpen, setDetailDialogOpen] = useState(false);
+  const [subscriptionDialogOpen, setSubscriptionDialogOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<any>(null);
+  const [selectedDuration, setSelectedDuration] = useState<'week' | 'month'>('week');
   const [products, setProducts] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
   const [cardDuration, setCardDuration] = useState<Record<string, 'week' | 'month'>>({});
   const [search, setSearch] = useState('');
   const navigate = useNavigate();
@@ -22,12 +26,14 @@ export function Home() {
   }, []);
 
   const loadProducts = async () => {
+    setLoading(true);
     const { data } = await supabase
       .from('products')
       .select('*')
       .eq('is_active', true)
       .order('created_at', { ascending: false });
     setProducts(data || []);
+    setLoading(false);
   };
 
   const handleOneTimePurchase = (product: any) => {
@@ -42,21 +48,26 @@ export function Home() {
   };
 
   const handleSubscribe = (product: any, duration: 'week' | 'month') => {
-    const totalPrice = getSubscriptionPrice(product, duration);
-    const now = new Date();
-    const endDate = new Date(now);
-    endDate.setDate(endDate.getDate() + (duration === 'week' ? 7 : 30));
+    setSelectedProduct(product);
+    setSelectedDuration(duration);
+    setSubscriptionDialogOpen(true);
+  };
+
+  const handleSubscriptionConfirm = (startDate: Date, endDate: Date) => {
+    if (!selectedProduct) return;
+    const totalPrice = getSubscriptionPrice(selectedProduct, selectedDuration);
     addToCart({
-      productId: product.id,
-      name: product.name,
+      productId: selectedProduct.id,
+      name: selectedProduct.name,
       price: totalPrice,
       quantity: 1,
-      imageUrl: product.image_url,
+      imageUrl: selectedProduct.image_url,
+      deliveryDate: startDate.toISOString(),
       subscription: {
-        duration,
-        startDate: now.toISOString(),
+        duration: selectedDuration,
+        startDate: startDate.toISOString(),
         endDate: endDate.toISOString(),
-        isTrial: duration === 'week'
+        isTrial: selectedDuration === 'week'
       }
     });
     navigate('/cart');
@@ -66,11 +77,19 @@ export function Home() {
     if (duration === 'week') {
       return 0; // First week free
     }
-    return product.price * 30 * 0.8; // Monthly with 20% discount
+    return product.price * 30; // Monthly price
   };
 
   return (
     <div>
+      {/* Navratri Special Banner */}
+      <section className="bg-gradient-to-r from-orange-500 to-pink-500">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 text-center">
+          <h1 className="text-2xl sm:text-3xl font-bold text-white mb-1">🔱 Navratri Special 🔱</h1>
+          <p className="text-white/90 text-sm sm:text-base">Divine Flowers for 9 Sacred Nights</p>
+        </div>
+      </section>
+
       {/* Products Section */}
       <section className="py-8 bg-gray-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -92,8 +111,23 @@ export function Home() {
             )}
           </div>
           <div className="relative">
-              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-6">
-            {products.filter((product) => {
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+            {loading ? (
+              // Skeleton Loading
+              Array.from({ length: 8 }).map((_, i) => (
+                <Card key={i} className="overflow-hidden flex flex-col animate-pulse">
+                  <div className="relative aspect-[4/3] bg-gray-200" />
+                  <div className="p-2 flex flex-col gap-2">
+                    <div className="h-4 bg-gray-200 rounded w-3/4" />
+                    <div className="h-3 bg-gray-200 rounded w-1/2" />
+                    <div className="h-3 bg-gray-200 rounded w-full" />
+                    <div className="h-3 bg-gray-200 rounded w-2/3" />
+                    <div className="h-7 bg-gray-200 rounded w-full mt-2" />
+                    <div className="h-8 bg-gray-200 rounded w-full" />
+                  </div>
+                </Card>
+              ))
+            ) : products.filter((product) => {
               if (!search.trim()) return true;
               const q = search.trim().toLowerCase();
               return (
@@ -103,7 +137,7 @@ export function Home() {
               );
             }).map((product) => {
               const weeklyPrice = 0; // First week free
-              const monthlyPrice = product.price * 30 * 0.8;
+              const monthlyPrice = product.price * 30;
               return (
                 <Card key={product.id} className="overflow-hidden flex flex-col">
                   <div className="relative aspect-[4/3] overflow-hidden">
@@ -172,7 +206,7 @@ export function Home() {
                                   {d === 'week' ? 'Weekly' : 'Monthly'}
                                 </span>
                                 <span className={`font-bold ${selected ? 'text-orange-600' : 'text-green-600'}`}>
-                                  {d === 'week' ? 'FREE trial' : `₹${monthlyPrice.toFixed(0)} (-20%)`}
+                                  {d === 'week' ? 'FREE trial' : `₹${monthlyPrice.toFixed(0)}`}
                                 </span>
                               </div>
                             );
@@ -194,7 +228,7 @@ export function Home() {
               );
             })}
           </div>
-            {products.filter((product) => {
+            {!loading && products.filter((product) => {
               if (!search.trim()) return true;
               const q = search.trim().toLowerCase();
               return (
@@ -221,10 +255,18 @@ export function Home() {
         }}
         onSubscribe={(duration) => {
           if (selectedProduct) {
-            handleSubscribe(selectedProduct, duration);
             setDetailDialogOpen(false);
+            handleSubscribe(selectedProduct, duration);
           }
         }}
+      />
+
+      <SubscriptionDialog
+        open={subscriptionDialogOpen}
+        onClose={() => setSubscriptionDialogOpen(false)}
+        product={selectedProduct}
+        duration={selectedDuration}
+        onConfirm={handleSubscriptionConfirm}
       />
     </div>
   );

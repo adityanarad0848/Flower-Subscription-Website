@@ -1,19 +1,38 @@
 import { Link, useLocation, useNavigate } from "react-router";
-import { Menu, X, ShoppingCart } from "lucide-react";
+import { Menu, ShoppingCart, MapPin, ChevronDown } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
 import { Button } from "./ui/button";
 import { Logo } from "./Logo";
 import { useCart } from "@/app/context/cart";
 import { useAuth } from "@/app/context/auth";
+import { supabase } from "../../lib/supabase";
 
 export function Header() {
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [cartDropdownOpen, setCartDropdownOpen] = useState(false);
   const cartRef = useRef<HTMLDivElement>(null);
   const location = useLocation();
   const navigate = useNavigate();
   const { items, removeFromCart, totalPrice, totalItems } = useCart();
   const { user } = useAuth();
+  const [defaultAddress, setDefaultAddress] = useState<{ id: string; name: string; house_no: string | null; building: string | null; address_line1: string; pincode: string | null } | null>(null);
+
+  const loadAddresses = () => {
+    if (!user) { setDefaultAddress(null); return; }
+    supabase
+      .from('user_addresses')
+      .select('id, name, house_no, building, address_line1, pincode, is_default')
+      .eq('user_id', user.id)
+      .order('is_default', { ascending: false })
+      .then(({ data, error }) => {
+        if (error) console.error('Address fetch error:', error);
+        setDefaultAddress(data?.find((a: any) => a.is_default) ?? data?.[0] ?? null);
+      });
+  };
+
+  useEffect(() => { loadAddresses(); }, [user]);
+
+  // Reload address when returning from select-location page
+  useEffect(() => { loadAddresses(); }, [location.pathname]);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -41,10 +60,32 @@ export function Header() {
     <header className="sticky top-0 z-50 bg-white/95 backdrop-blur-sm border-b border-gray-200">
       <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
-          {/* Logo */}
-          <Link to="/" className="flex items-center">
-            <Logo />
-          </Link>
+          {/* Delivery Address - mobile only */}
+          <button
+            onClick={() => navigate('/select-location')}
+            className="md:hidden flex items-center gap-1.5 min-w-0"
+          >
+            <MapPin className="w-4 h-4 text-orange-500 shrink-0" />
+            <div className="text-left min-w-0">
+              <p className="text-[10px] text-gray-400 leading-none">Deliver to</p>
+              <p className="text-sm font-semibold text-gray-900 truncate max-w-[180px]">
+                {defaultAddress ? (() => {
+                  // Build clean display: "Home · House 12, Sunrise Apt" or area from address_line1
+                  const parts: string[] = [];
+                  if (defaultAddress.house_no) parts.push(defaultAddress.house_no);
+                  if (defaultAddress.building) parts.push(defaultAddress.building);
+                  if (parts.length === 0) {
+                    // Fall back to first meaningful part of address_line1 (strip coords)
+                    const raw = defaultAddress.address_line1 ?? '';
+                    const isCoords = /^-?\d+\.\d+,\s*-?\d+\.\d+$/.test(raw.trim());
+                    parts.push(isCoords ? 'Pune' : raw.split(',')[0]);
+                  }
+                  return `${defaultAddress.name} · ${parts.join(', ')}`;
+                })() : 'Add address'}
+              </p>
+            </div>
+            <ChevronDown className="w-3.5 h-3.5 text-gray-400 shrink-0" />
+          </button>
 
           {/* Desktop Navigation & Cart */}
           <div className="hidden md:flex items-center gap-6">
@@ -62,9 +103,27 @@ export function Header() {
               </Link>
             ))}
 
-            {/* Auth Button */}
-            {!user && (
-              <Button onClick={() => navigate('/auth')} size="sm">Login</Button>
+            {/* Auth Button / User Circle - BESIDE CART */}
+            {user ? (
+              <button
+                onClick={() => navigate('/account')}
+                className="w-10 h-10 rounded-full bg-gradient-to-br from-orange-500 to-pink-600 text-white font-bold text-lg flex items-center justify-center hover:from-orange-600 hover:to-pink-700 transition-all shadow-lg hover:shadow-xl transform hover:scale-105"
+                aria-label="Account"
+                title={user.email ?? 'My Account'}
+              >
+                {(user.user_metadata?.full_name ?? user.email ?? 'U')[0].toUpperCase()}
+              </button>
+            ) : (
+              <button
+                onClick={() => navigate('/auth')}
+                className="w-10 h-10 rounded-full bg-gradient-to-br from-orange-500 to-pink-600 text-white font-bold flex items-center justify-center hover:from-orange-600 hover:to-pink-700 transition-all shadow-lg hover:shadow-xl transform hover:scale-105"
+                aria-label="Login"
+                title="Login"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                </svg>
+              </button>
             )}
 
             {/* Cart Button - Desktop */}
@@ -145,6 +204,27 @@ export function Header() {
 
           {/* Mobile Menu Button & Cart */}
           <div className="md:hidden flex items-center gap-2">
+            {/* User Circle - Mobile - BESIDE CART */}
+            {user ? (
+              <button
+                onClick={() => navigate('/account')}
+                className="w-9 h-9 rounded-full bg-gradient-to-br from-orange-500 to-pink-600 text-white font-bold text-sm flex items-center justify-center hover:from-orange-600 hover:to-pink-700 transition-all shadow-lg"
+                aria-label="Account"
+              >
+                {(user.user_metadata?.full_name ?? user.email ?? 'U')[0].toUpperCase()}
+              </button>
+            ) : (
+              <button
+                onClick={() => navigate('/auth')}
+                className="w-9 h-9 rounded-full bg-gradient-to-br from-orange-500 to-pink-600 text-white font-bold flex items-center justify-center hover:from-orange-600 hover:to-pink-700 transition-all shadow-lg"
+                aria-label="Login"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                </svg>
+              </button>
+            )}
+
             <button
               onClick={() => navigate('/cart')}
               className="relative p-2 hover:bg-gray-100 rounded-lg transition-colors"
@@ -160,64 +240,14 @@ export function Header() {
 
             <button
               className="md:hidden p-2"
-              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              onClick={() => navigate('/menu')}
             >
-              {mobileMenuOpen ? (
-                <X className="w-6 h-6" />
-              ) : (
-                <Menu className="w-6 h-6" />
-              )}
+              <Menu className="w-6 h-6" />
             </button>
           </div>
         </div>
-
-        {/* Mobile Navigation */}
-        {mobileMenuOpen && (
-          <div className="md:hidden py-4 border-t border-gray-200">
-            {navItems.map((item) => (
-              <Link
-                key={item.path}
-                to={item.path}
-                className={`block py-3 text-sm ${
-                  location.pathname === item.path
-                    ? "text-orange-600 font-medium"
-                    : "text-gray-600"
-                }`}
-                onClick={() => setMobileMenuOpen(false)}
-              >
-                {item.label}
-              </Link>
-            ))}
-            {!user && (
-              <Button
-                onClick={() => { navigate('/auth'); setMobileMenuOpen(false); }}
-                className="w-full mt-3 bg-orange-600 hover:bg-orange-700 text-white"
-                size="sm"
-              >
-                Login
-              </Button>
-            )}
-            <div className="mt-3 pt-3 border-t border-gray-200">
-              <p className="text-xs font-semibold text-gray-400 uppercase mb-2">Support</p>
-              {[
-                { label: 'FAQ', href: '#' },
-                { label: 'Contact Us', href: '#' },
-                { label: 'Delivery Info', href: '#' },
-                { label: 'Terms & Conditions', href: '#' },
-              ].map((item) => (
-                <a
-                  key={item.label}
-                  href={item.href}
-                  className="block py-2.5 text-sm text-gray-600"
-                  onClick={() => setMobileMenuOpen(false)}
-                >
-                  {item.label}
-                </a>
-              ))}
-            </div>
-          </div>
-        )}
       </nav>
+
     </header>
   );
 }

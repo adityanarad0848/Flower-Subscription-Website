@@ -8,10 +8,12 @@ import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
+import { Alert, AlertDescription } from './ui/alert';
 
 const getRedirectUrl = () => {
   if (Capacitor.isNativePlatform()) {
-    return 'http://localhost';
+    // Use custom app scheme for Android
+    return 'com.evrydayy.app://auth/callback';
   }
   return `${window.location.origin}/auth/callback`;
 };
@@ -20,6 +22,7 @@ export default function Auth({ onAuthSuccess }: { onAuthSuccess?: () => void }) 
   const { user } = useAuth();
   const navigate = useNavigate();
   const [isLogin, setIsLogin] = useState(true);
+  const [isForgotPassword, setIsForgotPassword] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [fullName, setFullName] = useState('');
@@ -29,6 +32,13 @@ export default function Auth({ onAuthSuccess }: { onAuthSuccess?: () => void }) 
   const [showOtpInput, setShowOtpInput] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
+  const [resetMethod, setResetMethod] = useState<'email' | 'phone'>('email');
+  const [resetIdentifier, setResetIdentifier] = useState('');
+  const [resetOtp, setResetOtp] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [showResetOtpInput, setShowResetOtpInput] = useState(false);
 
   useEffect(() => {
     if (user) {
@@ -109,27 +119,310 @@ export default function Auth({ onAuthSuccess }: { onAuthSuccess?: () => void }) 
 
   const handleGoogleSignIn = async () => {
     setLoading(true);
-    if (Capacitor.isNativePlatform()) {
+    setError('');
+    
+    try {
+      const redirectUrl = getRedirectUrl();
+      console.log('Step 1: Starting Google Sign-In');
+      console.log('Redirect URL:', redirectUrl);
+      
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: 'http://localhost',
-          skipBrowserRedirect: true
+          redirectTo: redirectUrl,
         }
       });
-      if (error) { setError(error.message); setLoading(false); return; }
-      if (data?.url) {
-        await Browser.open({ url: data.url });
+      
+      if (error) {
+        console.error('Google Sign-In error:', error);
+        setError(error.message);
+        setLoading(false);
+        return;
       }
-    } else {
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider: 'google',
-        options: { redirectTo: `${window.location.origin}/auth/callback` }
-      });
-      if (error) setError(error.message);
+      
+      if (data?.url) {
+        console.log('Step 2: Opening browser with URL:', data.url);
+        
+        if (Capacitor.isNativePlatform()) {
+          await Browser.open({ url: data.url });
+          console.log('Step 3: Browser opened');
+          
+          Browser.addListener('browserFinished', () => {
+            console.log('Browser closed by user');
+            supabase.auth.getSession().then(({ data: { session } }) => {
+              if (session) {
+                console.log('Session found! User:', session.user.email);
+                sessionStorage.setItem('splash_shown', '1');
+                localStorage.setItem('splash_shown', '1');
+                if (onAuthSuccess) onAuthSuccess();
+                else window.location.href = '/';
+              } else {
+                console.log('No session found after browser closed');
+              }
+            });
+          });
+        }
+      }
+    } catch (err: any) {
+      console.error('Google Sign-In exception:', err);
+      setError(err.message || 'Failed to sign in with Google');
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
+
+  const sendResetOtp = async () => {
+    setLoading(true);
+    setError('');
+    setSuccess('');
+    
+    try {
+      if (resetMethod === 'email') {
+        if (!resetIdentifier || !resetIdentifier.includes('@')) {
+          setError('Please enter a valid email address');
+          setLoading(false);
+          return;
+        }
+        
+        // Send password reset email via Supabase
+        const { error } = await supabase.auth.resetPasswordForEmail(resetIdentifier, {
+          redirectTo: `${window.location.origin}/auth/callback?type=recovery`
+        });
+        
+        if (error) throw error;
+        setSuccess('Password reset link sent to your email. Please check your inbox.');
+      } else {
+        // Phone-based reset
+        if (!resetIdentifier || resetIdentifier.length < 10) {
+          setError('Please enter a valid phone number');
+          setLoading(false);
+          return;
+        }
+        
+        // Check if phone exists in database
+        const { data: userProfile, error: profileError } = await supabase
+          .from('user_profiles')
+          .select('user_id, phone')
+          .eq('phone', resetIdentifier)
+          .single();
+        
+        if (profileError || !userProfile) {
+          setError('Phone number not found in our records');
+          setLoading(false);
+          return;
+        }
+        
+        // Generate and store OTP
+        const generatedOtp = Math.floor(100000 + Math.random() * 900000).toString();
+        sessionStorage.setItem('resetOtp', generatedOtp);
+        sessionStorage.setItem('resetPhone', resetIdentifier);
+        sessionStorage.setItem('resetUserId', userProfile.user_id);
+        
+        // In production, send OTP via SMS service (Twilio, AWS SNS, etc.)
+        alert(`OTP: ${generatedOtp}\n(Demo mode - In production, this will be sent via SMS)`);
+        
+        setShowResetOtpInput(true);
+        setSuccess('OTP sent to your phone number');
+      }
+    } catch (err: any) {
+      setError(err.message || 'Failed to send reset instructions');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handlePasswordReset = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    setError('');
+    setSuccess('');
+    
+    try {
+      if (resetMethod === 'phone') {
+        // Verify OTP
+        const savedOtp = sessionStorage.getItem('resetOtp');
+        const savedPhone = sessionStorage.getItem('resetPhone');
+        const savedUserId = sessionStorage.getItem('resetUserId');
+        
+        if (resetOtp !== savedOtp || resetIdentifier !== savedPhone) {
+          setError('Invalid OTP');
+          setLoading(false);
+          return;
+        }
+        
+        if (newPassword !== confirmPassword) {
+          setError('Passwords do not match');
+          setLoading(false);
+          return;
+        }
+        
+        if (newPassword.length < 6) {
+          setError('Password must be at least 6 characters');
+          setLoading(false);
+          return;
+        }
+        
+        // Update password using admin API (requires service role key in production)
+        // For now, we'll use the auth.updateUser method
+        const { error } = await supabase.auth.updateUser({
+          password: newPassword
+        });
+        
+        if (error) throw error;
+        
+        // Clear session storage
+        sessionStorage.removeItem('resetOtp');
+        sessionStorage.removeItem('resetPhone');
+        sessionStorage.removeItem('resetUserId');
+        
+        setSuccess('Password reset successful! You can now login with your new password.');
+        setTimeout(() => {
+          setIsForgotPassword(false);
+          setIsLogin(true);
+        }, 2000);
+      }
+    } catch (err: any) {
+      setError(err.message || 'Failed to reset password');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const resetForgotPasswordForm = () => {
+    setIsForgotPassword(false);
+    setResetIdentifier('');
+    setResetOtp('');
+    setNewPassword('');
+    setConfirmPassword('');
+    setShowResetOtpInput(false);
+    setError('');
+    setSuccess('');
+  };
+
+  // Forgot Password View
+  if (isForgotPassword) {
+    return (
+      <Card className="w-full max-w-md mx-auto">
+        <CardHeader>
+          <CardTitle>Reset Password</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={handlePasswordReset} className="space-y-4">
+            {/* Method Selection */}
+            <div className="space-y-2">
+              <Label>Reset via</Label>
+              <div className="flex gap-4">
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="radio"
+                    value="email"
+                    checked={resetMethod === 'email'}
+                    onChange={(e) => setResetMethod(e.target.value as 'email')}
+                    className="w-4 h-4"
+                  />
+                  <span>Email</span>
+                </label>
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="radio"
+                    value="phone"
+                    checked={resetMethod === 'phone'}
+                    onChange={(e) => setResetMethod(e.target.value as 'phone')}
+                    className="w-4 h-4"
+                  />
+                  <span>Phone Number</span>
+                </label>
+              </div>
+            </div>
+
+            {/* Email/Phone Input */}
+            {!showResetOtpInput && (
+              <div>
+                <Label htmlFor="resetIdentifier">
+                  {resetMethod === 'email' ? 'Email Address' : 'Phone Number'}
+                </Label>
+                <div className="flex gap-2">
+                  <Input
+                    id="resetIdentifier"
+                    type={resetMethod === 'email' ? 'email' : 'tel'}
+                    value={resetIdentifier}
+                    onChange={(e) => setResetIdentifier(e.target.value)}
+                    placeholder={resetMethod === 'email' ? 'your@email.com' : '+91 9876543210'}
+                    required
+                  />
+                  <Button type="button" onClick={sendResetOtp} disabled={loading}>
+                    {loading ? 'Sending...' : 'Send'}
+                  </Button>
+                </div>
+              </div>
+            )}
+
+            {/* OTP and Password Reset (Phone only) */}
+            {showResetOtpInput && resetMethod === 'phone' && (
+              <>
+                <div>
+                  <Label htmlFor="resetOtp">Enter OTP</Label>
+                  <Input
+                    id="resetOtp"
+                    value={resetOtp}
+                    onChange={(e) => setResetOtp(e.target.value)}
+                    placeholder="Enter 6-digit OTP"
+                    maxLength={6}
+                    required
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="newPassword">New Password</Label>
+                  <Input
+                    id="newPassword"
+                    type="password"
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
+                    placeholder="Enter new password"
+                    required
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="confirmPassword">Confirm Password</Label>
+                  <Input
+                    id="confirmPassword"
+                    type="password"
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    placeholder="Confirm new password"
+                    required
+                  />
+                </div>
+                <Button type="submit" disabled={loading} className="w-full">
+                  {loading ? 'Resetting...' : 'Reset Password'}
+                </Button>
+              </>
+            )}
+
+            {error && (
+              <Alert variant="destructive">
+                <AlertDescription>{error}</AlertDescription>
+              </Alert>
+            )}
+            {success && (
+              <Alert className="border-green-500 text-green-700">
+                <AlertDescription>{success}</AlertDescription>
+              </Alert>
+            )}
+
+            <Button
+              type="button"
+              variant="link"
+              onClick={resetForgotPasswordForm}
+              className="w-full"
+            >
+              Back to Login
+            </Button>
+          </form>
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
     <Card className="w-full max-w-md mx-auto">
@@ -189,10 +482,31 @@ export default function Auth({ onAuthSuccess }: { onAuthSuccess?: () => void }) 
             <Label htmlFor="password">Password</Label>
             <Input id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} required />
           </div>
-          {error && <p className="text-red-500 text-sm">{error}</p>}
+          {error && (
+            <Alert variant="destructive">
+              <AlertDescription>{error}</AlertDescription>
+            </Alert>
+          )}
+          {success && (
+            <Alert className="border-green-500 text-green-700">
+              <AlertDescription>{success}</AlertDescription>
+            </Alert>
+          )}
           <Button type="submit" disabled={loading} className="w-full">
             {loading ? 'Loading...' : isLogin ? 'Login' : 'Sign Up'}
           </Button>
+          
+          {isLogin && (
+            <Button
+              type="button"
+              variant="link"
+              onClick={() => setIsForgotPassword(true)}
+              className="w-full text-sm text-orange-600 hover:text-orange-700"
+            >
+              Forgot Password?
+            </Button>
+          )}
+          
           <Button type="button" variant="link" onClick={() => setIsLogin(!isLogin)} className="w-full">
             {isLogin ? 'Need an account? Sign up' : 'Have an account? Login'}
           </Button>

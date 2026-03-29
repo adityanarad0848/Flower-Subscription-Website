@@ -6,15 +6,17 @@
   "scripts": {
     "build": "vite build",
     "dev": "vite",
-    "android:sync": "npm run build && npx cap sync android",
+    "android:sync": "npm run build && npx cap sync android && node -e \"const fs=require('fs');const f='android/app/src/main/assets/capacitor.plugins.json';const p=JSON.parse(fs.readFileSync(f));if(!p.find(x=>x.pkg==='com.flowersubscription.app'))p.push({pkg:'com.flowersubscription.app',classpath:'com.flowersubscription.app.plugins.PayUMoneyPlugin'});fs.writeFileSync(f,JSON.stringify(p,null,2));\"",
     "android:open": "npx cap open android",
     "android:build": "npm run android:sync && cd android && ./gradlew assembleDebug"
   },
   "dependencies": {
     "@capacitor/android": "^8.2.0",
+    "@capacitor/app": "^8.1.0",
     "@capacitor/browser": "^8.0.2",
     "@capacitor/cli": "^8.2.0",
     "@capacitor/core": "^8.2.0",
+    "@capacitor/geolocation": "^8.1.0",
     "@emailjs/browser": "^4.4.1",
     "@emotion/react": "11.14.0",
     "@emotion/styled": "11.14.1",
@@ -59,6 +61,7 @@
     "lucide-react": "0.487.0",
     "motion": "12.23.24",
     "next-themes": "0.4.6",
+    "razorpay": "^2.9.6",
     "react-day-picker": "8.10.1",
     "react-dnd": "16.0.1",
     "react-dnd-html5-backend": "16.0.1",

@@ -73,7 +73,8 @@ interface CartContextValue extends State {
   totalItems: number;
   totalPrice: number;
   subtotal: number;
-  tax: number;
+  deliveryFee: number;
+  handlingFee: number;
   discount: number;
 }
 
@@ -102,9 +103,10 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
 
   const totalItems = state.items.reduce((s, i) => s + i.quantity, 0);
   const subtotal = state.items.reduce((s, i) => s + i.price * i.quantity, 0);
-  const tax = subtotal * 0.05; // 5% tax
-  const discount = subtotal > 500 ? subtotal * 0.1 : 0; // 10% discount if > 500
-  const totalPrice = subtotal + tax - discount;
+  const deliveryFee = 0; // Free delivery
+  const handlingFee = 3; // ₹3 handling fee
+  const discount = subtotal * 0.05; // 5% discount
+  const totalPrice = subtotal + deliveryFee + handlingFee - discount;
 
   return (
     <CartContext.Provider
@@ -117,7 +119,8 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
         totalItems,
         totalPrice,
         subtotal,
-        tax,
+        deliveryFee,
+        handlingFee,
         discount,
       }}
     >

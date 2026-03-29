@@ -1,7 +1,7 @@
 import { Button } from "./ui/button";
 import { Card, CardContent } from "./ui/card";
-import { Link } from "react-router";
-import { 
+import { Link, useNavigate } from "react-router";
+import { ArrowLeft,
   Package, 
   Truck, 
   Smile, 
@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 
 export function HowItWorks() {
+  const navigate = useNavigate();
   const steps = [
     {
       number: "01",
@@ -65,6 +66,19 @@ export function HowItWorks() {
 
   return (
     <div className="py-12 md:py-20">
+      {/* Back Button */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-6">
+        <Button
+          onClick={() => navigate('/')}
+          variant="ghost"
+          className="text-gray-600 hover:text-gray-900 -ml-2"
+          size="sm"
+        >
+          <ArrowLeft className="w-4 h-4 mr-2" />
+          Back to Home
+        </Button>
+      </div>
+      
       {/* Header */}
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center mb-16">
         <h1 className="text-4xl md:text-5xl font-bold mb-6">
