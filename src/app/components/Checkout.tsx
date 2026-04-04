@@ -5,6 +5,7 @@ import { supabase } from '@/lib/supabase';
 import { Loader, Plus, MapPin, ShoppingBag, ArrowLeft, Lock, ShieldCheck, Wallet } from 'lucide-react';
 import emailjs from '@emailjs/browser';
 import { PaymentService } from '@/payumoney-example';
+import { Capacitor } from '@capacitor/core';
 
 emailjs.init(import.meta.env.VITE_EMAILJS_PUBLIC_KEY);
 const paymentService = new PaymentService();
@@ -91,8 +92,8 @@ export default function Checkout() {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) throw new Error('User not found');
 
-    const isWeb = !window.Capacitor || window.Capacitor.getPlatform() === 'web';
-    if (isWeb) {
+    const isNative = Capacitor.isNativePlatform();
+    if (!isNative) {
       alert('⚠️ Payment Testing Mode\n\nNative PayU SDK only works on Android app.\n\nOrder will be marked as pending.');
       await supabase.from('orders').update({ status: 'pending', payment_method: 'payumoney_web_test' }).eq('id', orderData.id);
       clearCart();
@@ -100,21 +101,29 @@ export default function Checkout() {
       return;
     }
 
-    const result = await paymentService.initiatePayment({
-      amount: finalTotal.toFixed(2),
-      productInfo: `Order #${orderId} - Flower Subscription`,
-      firstName: selectedAddress?.name || 'Customer',
-      email: user.email || formData.email,
-      phone: selectedAddress?.phone || '0000000000',
-    });
+    try {
+      const result = await paymentService.initiatePayment({
+        amount: finalTotal.toFixed(2),
+        productInfo: `Order #${orderId} - Flower Subscription`,
+        firstName: selectedAddress?.name || 'Customer',
+        email: user.email || formData.email,
+        phone: selectedAddress?.phone || '0000000000',
+      });
 
-    if (result.success) {
-      await supabase.from('orders').update({ status: 'completed', payment_id: result.transactionId }).eq('id', orderData.id);
-      clearCart();
-      navigate('/checkout/success');
-    } else {
-      setError(result.message || 'Payment failed');
+      if (result.success) {
+        await supabase.from('orders').update({ status: 'completed', payment_id: result.transactionId }).eq('id', orderData.id);
+        clearCart();
+        navigate('/checkout/success');
+      } else {
+        setError(result.message || 'Payment failed');
+        await supabase.from('orders').update({ status: 'failed' }).eq('id', orderData.id);
+      }
+    } catch (err: any) {
+      console.error('Payment error:', err);
+      setError(err.message || 'Payment plugin error. Please try again.');
       await supabase.from('orders').update({ status: 'failed' }).eq('id', orderData.id);
+    } finally {
+      setLoading(false);
     }
   };
 

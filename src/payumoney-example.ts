@@ -1,4 +1,5 @@
 import PayUMoney from './payumoney-plugin';
+import { Capacitor } from '@capacitor/core';
 
 const MERCHANT_KEY = import.meta.env.VITE_PAYU_MERCHANT_KEY;
 const MERCHANT_SALT = import.meta.env.VITE_PAYU_MERCHANT_SALT;
@@ -18,6 +19,11 @@ export class PaymentService {
     email: string;
     phone: string;
   }) {
+    // Check if running on native platform
+    if (!Capacitor.isNativePlatform()) {
+      throw new Error('Payment is only available on mobile app');
+    }
+
     const txnId      = 'TXN' + Date.now();
     const hashString = `${MERCHANT_KEY}|${txnId}|${orderDetails.amount}|${orderDetails.productInfo}|${orderDetails.firstName}|${orderDetails.email}|||||||||||${MERCHANT_SALT}`;
     const hash       = await generateHash(hashString);
