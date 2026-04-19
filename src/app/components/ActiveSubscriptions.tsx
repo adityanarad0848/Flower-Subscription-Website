@@ -45,7 +45,7 @@ export default function ActiveSubscriptions() {
       .order('created_at', { ascending: false });
     
     setSubscriptions(data || []);
-    if (data && data.length > 0) {
+    if (data && data.length > 0 && !selectedSubscription) {
       setSelectedSubscription(data[0]);
     }
     setLoading(false);

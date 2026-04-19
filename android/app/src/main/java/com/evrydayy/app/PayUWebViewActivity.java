@@ -1,4 +1,4 @@
-package com.flowersubscription.app;
+package com.evrydayy.app;
 
 import android.annotation.SuppressLint;
 import android.app.Activity;
@@ -77,7 +77,6 @@ public class PayUWebViewActivity extends Activity {
                 String url = request.getUrl().toString();
                 android.util.Log.d("PayUWebView", "URL: " + url);
 
-                // Only intercept PayU success/failure callback pages
                 if (url.contains("mobileapp/payumoney/success") || url.contains("payment/success")) {
                     Intent result = new Intent();
                     result.putExtra("status", "success");
@@ -94,7 +93,6 @@ public class PayUWebViewActivity extends Activity {
                     return true;
                 }
 
-                // Let everything else (PayU pages, bank pages, etc.) load in WebView
                 return false;
             }
 
@@ -111,7 +109,6 @@ public class PayUWebViewActivity extends Activity {
             }
         });
 
-        // Use file:// base URL so WebView allows form POST to external HTTPS
         webView.loadDataWithBaseURL(
             "file:///android_asset/",
             html,

@@ -1,9 +1,9 @@
-package com.flowersubscription.app;
+package com.evrydayy.app;
 
 import android.content.Intent;
 import android.net.Uri;
 import com.getcapacitor.BridgeActivity;
-import com.flowersubscription.app.plugins.PayUMoneyPlugin;
+import com.evrydayy.app.plugins.PayUMoneyPlugin;
 
 public class MainActivity extends BridgeActivity {
 

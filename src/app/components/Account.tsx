@@ -116,11 +116,13 @@ export default function Account() {
       setWallet(newWallet || { balance: 0 });
     }
     
+    const today = new Date().toISOString().split('T')[0];
     const { data: plansData, error: plansError } = await supabase
       .from('user_subscriptions')
       .select('*')
       .eq('user_id', user.id)
       .in('status', ['active', 'paused'])
+      .gte('end_date', today)
       .order('created_at', { ascending: false });
     
     if (plansError) {
@@ -496,7 +498,7 @@ export default function Account() {
       {activeTab === 'plans' && (
         <Card>
           <CardHeader>
-            <CardTitle>Active Subscription</CardTitle>
+            <CardTitle>Active Subscriptions</CardTitle>
           </CardHeader>
           <CardContent>
             {activePlans.length === 0 ? (
@@ -506,61 +508,58 @@ export default function Account() {
                 <p className="text-gray-500 text-sm">Subscribe to a plan to see it here</p>
               </div>
             ) : (
-              <div>
-                {(() => {
-                  const recentPlan = activePlans[0]; // Get only the most recent plan
-                  return (
-                    <div key={recentPlan.id} className="border rounded-lg p-4">
-                      <div className="flex justify-between items-start mb-2">
-                        <div>
-                          <h3 className="font-bold text-lg">{recentPlan.product_name}</h3>
-                          <p className="text-sm text-gray-600 capitalize">{recentPlan.duration === 'week' ? '1 Week Free Trial' : 'Monthly Subscription'}</p>
-                        </div>
-                        <span className={`px-3 py-1 rounded-full text-sm font-semibold ${
-                          recentPlan.status === 'active' ? 'bg-green-100 text-green-800' : 'bg-orange-100 text-orange-800'
-                        }`}>
-                          {recentPlan.status}
-                        </span>
+              <div className="space-y-3">
+                {activePlans.map((plan) => (
+                  <div key={plan.id} className="border rounded-lg p-4">
+                    <div className="flex justify-between items-start mb-2">
+                      <div>
+                        <h3 className="font-bold text-lg">{plan.product_name}</h3>
+                        <p className="text-sm text-gray-600 capitalize">{plan.duration === 'week' ? '1 Week Free Trial' : 'Monthly Subscription'}</p>
                       </div>
-                      <div className="grid grid-cols-2 gap-2 text-sm mb-3">
-                        <div>
-                          <p className="text-gray-600">Start Date & Time</p>
-                          <p className="font-semibold">{format(new Date(recentPlan.start_date), 'PPP')}</p>
-                          <p className="text-xs text-gray-500">{format(new Date(recentPlan.start_date), 'p')}</p>
-                        </div>
-                        <div>
-                          <p className="text-gray-600">End Date</p>
-                          <p className="font-semibold">{format(new Date(recentPlan.end_date), 'PP')}</p>
-                        </div>
-                        <div>
-                          <p className="text-gray-600">Price</p>
-                          <p className="font-semibold text-orange-600">₹{recentPlan.price.toFixed(2)}</p>
-                        </div>
+                      <span className={`px-3 py-1 rounded-full text-sm font-semibold ${
+                        plan.status === 'active' ? 'bg-green-100 text-green-800' : 'bg-orange-100 text-orange-800'
+                      }`}>
+                        {plan.status}
+                      </span>
+                    </div>
+                    <div className="grid grid-cols-2 gap-2 text-sm mb-3">
+                      <div>
+                        <p className="text-gray-600">Start Date & Time</p>
+                        <p className="font-semibold">{format(new Date(plan.start_date), 'PPP')}</p>
+                        <p className="text-xs text-gray-500">{format(new Date(plan.start_date), 'p')}</p>
                       </div>
-                      <div className="flex gap-2">
-                        <Button
-                          onClick={() => {
-                            setSelectedPlanId(recentPlan.id);
-                            setManageDatesOpen(true);
-                          }}
-                          variant="outline"
-                          size="sm"
-                          className="flex-1"
-                        >
-                          Manage Dates
-                        </Button>
-                        <Button
-                          onClick={() => togglePause(recentPlan.id, recentPlan.status)}
-                          variant={recentPlan.status === 'active' ? 'destructive' : 'default'}
-                          size="sm"
-                          className="flex-1"
-                        >
-                          {recentPlan.status === 'active' ? 'Pause Plan' : 'Resume Plan'}
-                        </Button>
+                      <div>
+                        <p className="text-gray-600">End Date</p>
+                        <p className="font-semibold">{format(new Date(plan.end_date), 'PP')}</p>
+                      </div>
+                      <div>
+                        <p className="text-gray-600">Price</p>
+                        <p className="font-semibold text-orange-600">₹{plan.price.toFixed(2)}</p>
                       </div>
                     </div>
-                  );
-                })()}
+                    <div className="flex gap-2">
+                      <Button
+                        onClick={() => {
+                          setSelectedPlanId(plan.id);
+                          setManageDatesOpen(true);
+                        }}
+                        variant="outline"
+                        size="sm"
+                        className="flex-1"
+                      >
+                        Manage Dates
+                      </Button>
+                      <Button
+                        onClick={() => togglePause(plan.id, plan.status)}
+                        variant={plan.status === 'active' ? 'destructive' : 'default'}
+                        size="sm"
+                        className="flex-1"
+                      >
+                        {plan.status === 'active' ? 'Pause Plan' : 'Resume Plan'}
+                      </Button>
+                    </div>
+                  </div>
+                ))}
               </div>
             )}
           </CardContent>

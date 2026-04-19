@@ -183,6 +183,18 @@ export default function Checkout() {
 
       const subscriptionItems = items.filter(item => item.subscription);
       if (subscriptionItems.length > 0) {
+        // First, deactivate any existing active subscriptions for the same products
+        const productIds = subscriptionItems.map(item => item.productId).filter(Boolean);
+        if (productIds.length > 0) {
+          await supabase
+            .from('user_subscriptions')
+            .update({ status: 'replaced' })
+            .eq('user_id', user.id)
+            .eq('status', 'active')
+            .in('product_id', productIds);
+        }
+
+        // Then create new subscriptions
         const subscriptions = subscriptionItems.map(item => {
           const startDate = item.subscription?.startDate || new Date().toISOString();
           const end = new Date(startDate);

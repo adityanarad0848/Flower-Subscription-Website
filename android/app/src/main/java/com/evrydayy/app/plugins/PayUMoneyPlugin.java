@@ -1,4 +1,4 @@
-package com.flowersubscription.app.plugins;
+package com.evrydayy.app.plugins;
 
 import android.app.Activity;
 import android.content.Intent;
@@ -11,7 +11,7 @@ import com.getcapacitor.PluginCall;
 import com.getcapacitor.PluginMethod;
 import com.getcapacitor.annotation.ActivityCallback;
 import com.getcapacitor.annotation.CapacitorPlugin;
-import com.flowersubscription.app.PayUWebViewActivity;
+import com.evrydayy.app.PayUWebViewActivity;
 
 @CapacitorPlugin(name = "PayUMoney")
 public class PayUMoneyPlugin extends Plugin {
