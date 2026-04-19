@@ -218,7 +218,7 @@ export default function DesktopLanding() {
               <Mail className="h-8 w-8 text-orange-600" />
               <div>
                 <h3 className="font-semibold">Email</h3>
-                <p className="text-gray-600">support@evrydayy.com</p>
+                <p className="text-gray-600">support@mornify.in</p>
               </div>
             </div>
           </div>
