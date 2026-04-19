@@ -55,12 +55,12 @@ export function ContactUs() {
               </div>
               <h3 className="font-bold text-lg mb-2">Email Us</h3>
               <a 
-                href="mailto:support@evrydayy.com?subject=Customer Inquiry&body=Hello Evrydayy Team,%0D%0A%0D%0A" 
+                href="mailto:support@mornify.com?subject=Customer Inquiry&body=Hello Evrydayy Team,%0D%0A%0D%0A" 
                 className="text-orange-600 hover:text-orange-700 font-medium underline"
                 target="_blank"
                 rel="noopener noreferrer"
               >
-                support@evrydayy.com
+                support@mornify.com
               </a>
               <p className="text-xs text-gray-500 mt-2">Click to open email client</p>
             </div>

@@ -25,7 +25,7 @@ export function Footer() {
             </p>
             <div className="flex gap-4">
               <a
-                href="https://instagram.com/evrydayy"
+                href="https://instagram.com/mornify"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-gray-400 hover:text-orange-500 transition-colors"
@@ -34,7 +34,7 @@ export function Footer() {
                 <Instagram className="w-5 h-5" />
               </a>
               <a
-                href="https://facebook.com/evrydayy"
+                href="https://facebook.com/mornify"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-gray-400 hover:text-orange-500 transition-colors"
@@ -43,7 +43,7 @@ export function Footer() {
                 <Facebook className="w-5 h-5" />
               </a>
               <a
-                href="https://twitter.com/evrydayy"
+                href="https://twitter.com/mornify"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-gray-400 hover:text-orange-500 transition-colors"
@@ -147,11 +147,11 @@ export function Footer() {
               </li>
               <li className="pt-2">
                 <a 
-                  href="mailto:support@evrydayy.com" 
+                  href="mailto:support@mornify.com" 
                   className="flex items-center gap-2 text-gray-400 hover:text-orange-500 transition-colors text-sm py-0.5 leading-none"
                 >
                   <Mail className="w-4 h-4" />
-                  support@evrydayy.com
+                  support@mornify.com
                 </a>
               </li>
               <li>

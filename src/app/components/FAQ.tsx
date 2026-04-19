@@ -100,7 +100,7 @@ export function FAQ() {
           <p className="mb-6">Our support team is here to help you</p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <a
-              href="mailto:support@evrydayy.com"
+              href="mailto:support@mornify.com"
               className="bg-white text-orange-600 font-bold px-6 py-3 rounded-full hover:bg-gray-100 transition-colors"
             >
               Email Us

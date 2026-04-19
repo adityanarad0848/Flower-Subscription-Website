@@ -4,9 +4,13 @@
   "version": "0.0.1",
   "type": "module",
   "scripts": {
-    "build": "vite build",
+    "build": "vite build --config vite.config.mobile.ts",
+    "build:web": "vite build --config vite.config.web.ts",
+    "build:mobile": "vite build --config vite.config.mobile.ts",
     "dev": "vite",
-    "android:sync": "npm run build && npx cap sync android && node -e \"const fs=require('fs');const f='android/app/src/main/assets/capacitor.plugins.json';const p=JSON.parse(fs.readFileSync(f));if(!p.find(x=>x.pkg==='com.flowersubscription.app'))p.push({pkg:'com.flowersubscription.app',classpath:'com.flowersubscription.app.plugins.PayUMoneyPlugin'});fs.writeFileSync(f,JSON.stringify(p,null,2));\"",
+    "dev:web": "vite --config vite.config.web.ts",
+    "dev:mobile": "vite --config vite.config.mobile.ts",
+    "android:sync": "npm run build:mobile && npx cap sync android && node -e \"const fs=require('fs');const f='android/app/src/main/assets/capacitor.plugins.json';const p=JSON.parse(fs.readFileSync(f));if(!p.find(x=>x.pkg==='com.flowersubscription.app'))p.push({pkg:'com.flowersubscription.app',classpath:'com.flowersubscription.app.plugins.PayUMoneyPlugin'});fs.writeFileSync(f,JSON.stringify(p,null,2));\"",
     "android:open": "npx cap open android",
     "android:build": "npm run android:sync && cd android && ./gradlew assembleDebug"
   },

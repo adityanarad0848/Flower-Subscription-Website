@@ -127,7 +127,7 @@ export function TermsAndConditions() {
               For questions about these Terms and Conditions, please contact us:
             </p>
             <div className="bg-gray-50 rounded-lg p-4 space-y-2 text-gray-600">
-              <p><strong>Email:</strong> support@evrydayy.com</p>
+              <p><strong>Email:</strong> support@mornify.com</p>
               <p><strong>Phone:</strong> +91 98765 43210</p>
               <p><strong>Hours:</strong> Mon-Sat: 6 AM - 8 PM, Sunday: 6 AM - 12 PM</p>
             </div>

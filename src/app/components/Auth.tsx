@@ -13,7 +13,7 @@ import { Alert, AlertDescription } from './ui/alert';
 const getRedirectUrl = () => {
   if (Capacitor.isNativePlatform()) {
     // Use custom app scheme for Android
-    return 'com.evrydayy.app://auth/callback';
+    return 'com.mornify.app://auth/callback';
   }
   return `${window.location.origin}/auth/callback`;
 };
