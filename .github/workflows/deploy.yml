@@ -1,9 +1,12 @@
-name: Deploy to EC2
+name: Deploy Website to EC2
 
 on:
   push:
     branches:
       - main
+    paths:
+      - 'apps/website/**'
+      - '.github/workflows/deploy.yml'
 
 jobs:
   deploy:
@@ -19,10 +22,12 @@ jobs:
           node-version: '18'
       
       - name: Install dependencies
+        working-directory: ./apps/website
         run: npm install
       
       - name: Build project
-        run: npm run build:web
+        working-directory: ./apps/website
+        run: npm run build
       
       - name: Deploy to EC2
         uses: appleboy/ssh-action@master
@@ -33,11 +38,10 @@ jobs:
           script: |
             cd ~/Flower-Subscription-Website
             git pull origin main
+            cd apps/website
             npm install
-            npm run build:web
+            npm run build
+            cd ~/Flower-Subscription-Website
             rm -rf dist
-            mv dist-web dist
-            cd android/backend
-            npm install
-            pm2 restart backend
+            cp -r apps/website/dist ./dist
             sudo systemctl reload nginx

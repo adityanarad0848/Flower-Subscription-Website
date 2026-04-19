@@ -1,0 +1,24 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+
+    <!-- Outer petals — scaled from 40x40 to 108x108 (factor 2.7) -->
+    <!-- Original: cx=20,cy=8 → 54,21.6 -->
+    <path android:pathData="M54,14 m-6.75,0 a6.75,6.75 0 1,0 13.5,0 a6.75,6.75 0 1,0 -13.5,0" android:fillColor="#F97316"/>
+    <path android:pathData="M75.6,29.7 m-6.75,0 a6.75,6.75 0 1,0 13.5,0 a6.75,6.75 0 1,0 -13.5,0" android:fillColor="#EC4899"/>
+    <path android:pathData="M86.4,54 m-6.75,0 a6.75,6.75 0 1,0 13.5,0 a6.75,6.75 0 1,0 -13.5,0" android:fillColor="#8B5CF6"/>
+    <path android:pathData="M75.6,78.3 m-6.75,0 a6.75,6.75 0 1,0 13.5,0 a6.75,6.75 0 1,0 -13.5,0" android:fillColor="#F59E0B"/>
+    <path android:pathData="M54,86.4 m-6.75,0 a6.75,6.75 0 1,0 13.5,0 a6.75,6.75 0 1,0 -13.5,0" android:fillColor="#EF4444"/>
+    <path android:pathData="M32.4,78.3 m-6.75,0 a6.75,6.75 0 1,0 13.5,0 a6.75,6.75 0 1,0 -13.5,0" android:fillColor="#EC4899"/>
+    <path android:pathData="M21.6,54 m-6.75,0 a6.75,6.75 0 1,0 13.5,0 a6.75,6.75 0 1,0 -13.5,0" android:fillColor="#F97316"/>
+    <path android:pathData="M32.4,29.7 m-6.75,0 a6.75,6.75 0 1,0 13.5,0 a6.75,6.75 0 1,0 -13.5,0" android:fillColor="#8B5CF6"/>
+
+    <!-- Center sun -->
+    <path android:pathData="M54,54 m-21.6,0 a21.6,21.6 0 1,0 43.2,0 a21.6,21.6 0 1,0 -43.2,0" android:fillColor="#F59E0B"/>
+
+    <!-- Inner glow -->
+    <path android:pathData="M54,54 m-13.5,0 a13.5,13.5 0 1,0 27,0 a13.5,13.5 0 1,0 -27,0" android:fillColor="#FEF3C7" android:fillAlpha="0.85"/>
+
+</vector>
