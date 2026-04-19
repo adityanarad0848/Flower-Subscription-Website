@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom';
-import { Flower2, Clock, Truck, Shield, Star, Phone, Mail } from 'lucide-react';
+import { Flower2, Clock, Truck, Shield, Star } from 'lucide-react';
 
 export default function DesktopLanding() {
   const navigate = useNavigate();
@@ -17,7 +17,6 @@ export default function DesktopLanding() {
             <a href="#features" className="text-gray-700 hover:text-orange-600">Features</a>
             <a href="#how-it-works" className="text-gray-700 hover:text-orange-600">How It Works</a>
             <a href="#pricing" className="text-gray-700 hover:text-orange-600">Pricing</a>
-            <a href="#contact" className="text-gray-700 hover:text-orange-600">Contact</a>
           </nav>
           <button
             onClick={() => navigate('/auth')}
@@ -196,32 +195,6 @@ export default function DesktopLanding() {
           >
             Get Started Today
           </button>
-        </div>
-      </section>
-
-      {/* Contact Section */}
-      <section id="contact" className="py-20">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-12">
-            <h2 className="text-4xl font-bold text-gray-900 mb-4">Get In Touch</h2>
-            <p className="text-xl text-gray-600">Have questions? We're here to help!</p>
-          </div>
-          <div className="grid md:grid-cols-2 gap-8 max-w-2xl mx-auto">
-            <div className="flex items-center space-x-4 p-6 bg-white rounded-lg shadow">
-              <Phone className="h-8 w-8 text-orange-600" />
-              <div>
-                <h3 className="font-semibold">Phone</h3>
-                <p className="text-gray-600">+91 XXX XXX XXXX</p>
-              </div>
-            </div>
-            <div className="flex items-center space-x-4 p-6 bg-white rounded-lg shadow">
-              <Mail className="h-8 w-8 text-orange-600" />
-              <div>
-                <h3 className="font-semibold">Email</h3>
-                <p className="text-gray-600">support@mornify.in</p>
-              </div>
-            </div>
-          </div>
         </div>
       </section>
 
