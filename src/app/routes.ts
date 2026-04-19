@@ -4,6 +4,7 @@ import Products from "./components/Products";
 import { HowItWorks } from "./components/HowItWorks";
 import { AddressManager } from "./components/AddressManager";
 import Root from "./components/Root";
+import RootWithoutHeader from "./components/RootWithoutHeader";
 import Cart from '@/app/components/Cart';
 import Checkout from '@/app/components/Checkout';
 import CheckoutSuccess from '@/app/components/CheckoutSuccess';
@@ -26,9 +27,15 @@ import DeviceRouter from '@/app/components/DeviceRouter';
 export const router = createBrowserRouter([
   {
     path: "/",
-    Component: Root,
+    Component: RootWithoutHeader,
     children: [
       { index: true, Component: DeviceRouter },
+    ],
+  },
+  {
+    path: "/",
+    Component: Root,
+    children: [
       { path: "how-it-works", Component: HowItWorks },
       { path: "cart", Component: Cart },
       { path: "checkout", Component: Checkout },
