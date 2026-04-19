@@ -21,23 +21,14 @@ import { DeliveryInfo } from '@/app/components/DeliveryInfo';
 import { TermsAndConditions } from '@/app/components/TermsAndConditions';
 import { Menu } from '@/app/components/Menu';
 import DesktopLanding from '@/app/components/DesktopLanding';
-import { isDesktopDevice } from '@/app/lib/deviceDetection';
+import DeviceRouter from '@/app/components/DeviceRouter';
 
 export const router = createBrowserRouter([
   {
     path: "/",
     Component: Root,
     children: [
-      { 
-        index: true, 
-        Component: () => {
-          // Show desktop landing for desktop users, mobile PWA for mobile users
-          if (isDesktopDevice()) {
-            return <DesktopLanding />;
-          }
-          return <Home />;
-        }
-      },
+      { index: true, Component: DeviceRouter },
       { path: "how-it-works", Component: HowItWorks },
       { path: "cart", Component: Cart },
       { path: "checkout", Component: Checkout },
