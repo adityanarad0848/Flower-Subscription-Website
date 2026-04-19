@@ -8,22 +8,16 @@ export function isMobileDevice(): boolean {
   if (typeof navigator !== 'undefined') {
     const userAgent = navigator.userAgent || navigator.vendor || (window as any).opera;
     
-    // Mobile device patterns
-    const mobileRegex = /android|webos|iphone|ipad|ipod|blackberry|iemobile|opera mini|mobile/i;
+    // Mobile device patterns (excluding iPad which reports as desktop)
+    const mobileRegex = /android|webos|iphone|ipod|blackberry|iemobile|opera mini/i;
     
-    // Check if mobile
+    // Check if mobile phone
     if (mobileRegex.test(userAgent.toLowerCase())) {
       return true;
     }
 
-    // Check for tablet
-    const isTablet = /(tablet|ipad|playbook|silk)|(android(?!.*mobi))/i.test(userAgent.toLowerCase());
-    if (isTablet) {
-      return true;
-    }
-
-    // Check screen size as fallback
-    if (window.innerWidth <= 768) {
+    // Check screen size - only consider truly mobile sizes
+    if (typeof window !== 'undefined' && window.innerWidth < 1024) {
       return true;
     }
   }
