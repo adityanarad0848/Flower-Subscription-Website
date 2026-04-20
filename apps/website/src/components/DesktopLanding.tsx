@@ -1,11 +1,11 @@
 import { useNavigate } from 'react-router-dom';
-import { Flower2, Clock, Truck, Shield, Star } from 'lucide-react';
+import { Flower2, Clock, Truck, Shield, Star, Smartphone } from 'lucide-react';
 
 export default function DesktopLanding() {
   const navigate = useNavigate();
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-orange-50 to-white">
+    <div className="min-h-screen bg-gradient-to-b from-orange-100 via-orange-50 to-white">
       {/* Header */}
       <header className="bg-white shadow-sm sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
@@ -13,14 +13,23 @@ export default function DesktopLanding() {
             <Flower2 className="h-8 w-8 text-orange-600" />
             <h1 className="text-2xl font-bold text-orange-600">Mornify</h1>
           </div>
-          <nav className="hidden md:flex space-x-8">
-            <a href="#features" className="text-gray-700 hover:text-orange-600">Features</a>
-            <a href="#how-it-works" className="text-gray-700 hover:text-orange-600">How It Works</a>
-            <a href="#pricing" className="text-gray-700 hover:text-orange-600">Pricing</a>
+          <nav className="hidden md:flex space-x-8 items-center">
+            <a href="#features" className="text-gray-700 hover:text-orange-600 transition">Features</a>
+            <a href="#how-it-works" className="text-gray-700 hover:text-orange-600 transition">How It Works</a>
+            <a href="#testimonials" className="text-gray-700 hover:text-orange-600 transition">Reviews</a>
+            <a 
+              href="https://play.google.com/store" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="flex items-center space-x-2 bg-orange-600 text-white px-4 py-2 rounded-lg hover:bg-orange-700 transition shadow-md"
+            >
+              <Smartphone className="h-5 w-5" />
+              <span>Download App</span>
+            </a>
           </nav>
           <button
             onClick={() => navigate('/auth')}
-            className="bg-orange-600 text-white px-6 py-2 rounded-lg hover:bg-orange-700 transition"
+            className="bg-orange-600 text-white px-6 py-2 rounded-lg hover:bg-orange-700 transition shadow-md"
           >
             Get Started
           </button>
@@ -41,16 +50,19 @@ export default function DesktopLanding() {
             <div className="flex space-x-4">
               <button
                 onClick={() => navigate('/auth')}
-                className="bg-orange-600 text-white px-8 py-4 rounded-lg text-lg font-semibold hover:bg-orange-700 transition shadow-lg"
+                className="bg-orange-600 text-white px-8 py-4 rounded-lg text-lg font-semibold hover:bg-orange-700 transition shadow-lg hover:shadow-xl transform hover:scale-105"
               >
                 Start Your Subscription
               </button>
-              <button
-                onClick={() => navigate('/how-it-works')}
-                className="bg-white text-orange-600 px-8 py-4 rounded-lg text-lg font-semibold hover:bg-gray-50 transition border-2 border-orange-600"
+              <a
+                href="https://play.google.com/store"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="bg-white text-orange-600 px-8 py-4 rounded-lg text-lg font-semibold hover:bg-gray-50 transition border-2 border-orange-600 shadow-lg hover:shadow-xl transform hover:scale-105 flex items-center space-x-2"
               >
-                Learn More
-              </button>
+                <Smartphone className="h-6 w-6" />
+                <span>Download App</span>
+              </a>
             </div>
           </div>
           <div className="relative">
@@ -137,7 +149,7 @@ export default function DesktopLanding() {
       </section>
 
       {/* Testimonials */}
-      <section className="bg-orange-50 py-20">
+      <section id="testimonials" className="bg-orange-50 py-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
             <h2 className="text-4xl font-bold text-gray-900 mb-4">What Our Customers Say</h2>
@@ -181,7 +193,7 @@ export default function DesktopLanding() {
       </section>
 
       {/* CTA Section */}
-      <section className="bg-orange-600 py-20">
+      <section className="bg-gradient-to-r from-orange-600 to-orange-500 py-20">
         <div className="max-w-4xl mx-auto text-center px-4">
           <h2 className="text-4xl font-bold text-white mb-6">
             Ready to Start Your Flower Subscription?
@@ -189,12 +201,23 @@ export default function DesktopLanding() {
           <p className="text-xl text-orange-100 mb-8">
             Join thousands of happy customers enjoying fresh flowers daily
           </p>
-          <button
-            onClick={() => navigate('/auth')}
-            className="bg-white text-orange-600 px-10 py-4 rounded-lg text-lg font-semibold hover:bg-gray-100 transition shadow-lg"
-          >
-            Get Started Today
-          </button>
+          <div className="flex justify-center space-x-4">
+            <button
+              onClick={() => navigate('/auth')}
+              className="bg-white text-orange-600 px-10 py-4 rounded-lg text-lg font-semibold hover:bg-gray-100 transition shadow-lg hover:shadow-xl transform hover:scale-105"
+            >
+              Get Started Today
+            </button>
+            <a
+              href="https://play.google.com/store"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="bg-orange-800 text-white px-10 py-4 rounded-lg text-lg font-semibold hover:bg-orange-900 transition shadow-lg hover:shadow-xl transform hover:scale-105 flex items-center space-x-2"
+            >
+              <Smartphone className="h-6 w-6" />
+              <span>Download App</span>
+            </a>
+          </div>
         </div>
       </section>
 
@@ -228,12 +251,15 @@ export default function DesktopLanding() {
             <div>
               <h4 className="font-semibold mb-4">Download App</h4>
               <p className="text-gray-400 mb-4">Get our mobile app for the best experience</p>
-              <button
-                onClick={() => navigate('/')}
-                className="bg-orange-600 text-white px-4 py-2 rounded hover:bg-orange-700 transition"
+              <a
+                href="https://play.google.com/store"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center space-x-2 bg-orange-600 text-white px-4 py-2 rounded hover:bg-orange-700 transition"
               >
-                Open Mobile App
-              </button>
+                <Smartphone className="h-5 w-5" />
+                <span>Get on Play Store</span>
+              </a>
             </div>
           </div>
           <div className="border-t border-gray-800 mt-8 pt-8 text-center text-gray-400">
