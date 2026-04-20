@@ -1,37 +1,87 @@
 <svg width="120" height="120" viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <!-- Background Circle -->
-  <circle cx="60" cy="60" r="58" fill="#FFF7ED" stroke="#EA580C" stroke-width="2"/>
+  <defs>
+    <!-- Gradient for sun -->
+    <radialGradient id="sunGradient" cx="50%" cy="50%">
+      <stop offset="0%" style="stop-color:#FCD34D;stop-opacity:1" />
+      <stop offset="50%" style="stop-color:#FBBF24;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#F59E0B;stop-opacity:0.8" />
+    </radialGradient>
+    
+    <!-- Gradient for petals -->
+    <linearGradient id="petalGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#FB923C;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#EA580C;stop-opacity:1" />
+    </linearGradient>
+    
+    <!-- Gradient for center -->
+    <radialGradient id="centerGradient" cx="50%" cy="50%">
+      <stop offset="0%" style="stop-color:#FEF3C7;stop-opacity:1" />
+      <stop offset="50%" style="stop-color:#FDE047;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#FACC15;stop-opacity:1" />
+    </radialGradient>
+    
+    <!-- Shadow -->
+    <filter id="shadow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur in="SourceAlpha" stdDeviation="3"/>
+      <feOffset dx="0" dy="2" result="offsetblur"/>
+      <feComponentTransfer>
+        <feFuncA type="linear" slope="0.3"/>
+      </feComponentTransfer>
+      <feMerge>
+        <feMergeNode/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
   
-  <!-- Sun Rays (Morning) -->
-  <g opacity="0.6">
-    <line x1="60" y1="15" x2="60" y2="25" stroke="#F97316" stroke-width="3" stroke-linecap="round"/>
-    <line x1="85" y1="20" x2="80" y2="28" stroke="#F97316" stroke-width="3" stroke-linecap="round"/>
-    <line x1="100" y1="35" x2="92" y2="40" stroke="#F97316" stroke-width="3" stroke-linecap="round"/>
-    <line x1="35" y1="20" x2="40" y2="28" stroke="#F97316" stroke-width="3" stroke-linecap="round"/>
-    <line x1="20" y1="35" x2="28" y2="40" stroke="#F97316" stroke-width="3" stroke-linecap="round"/>
+  <!-- Background glow -->
+  <circle cx="60" cy="60" r="55" fill="url(#sunGradient)" opacity="0.2"/>
+  
+  <!-- Sun rays (animated feel) -->
+  <g opacity="0.7">
+    <line x1="60" y1="10" x2="60" y2="22" stroke="#F59E0B" stroke-width="4" stroke-linecap="round"/>
+    <line x1="88" y1="17" x2="81" y2="27" stroke="#F59E0B" stroke-width="4" stroke-linecap="round"/>
+    <line x1="103" y1="32" x2="93" y2="39" stroke="#F59E0B" stroke-width="4" stroke-linecap="round"/>
+    <line x1="110" y1="60" x2="98" y2="60" stroke="#F59E0B" stroke-width="4" stroke-linecap="round"/>
+    <line x1="103" y1="88" x2="93" y2="81" stroke="#F59E0B" stroke-width="4" stroke-linecap="round"/>
+    <line x1="32" y1="17" x2="39" y2="27" stroke="#F59E0B" stroke-width="4" stroke-linecap="round"/>
+    <line x1="17" y1="32" x2="27" y2="39" stroke="#F59E0B" stroke-width="4" stroke-linecap="round"/>
+    <line x1="10" y1="60" x2="22" y2="60" stroke="#F59E0B" stroke-width="4" stroke-linecap="round"/>
+    <line x1="17" y1="88" x2="27" y2="81" stroke="#F59E0B" stroke-width="4" stroke-linecap="round"/>
   </g>
   
-  <!-- Flower Petals -->
-  <g transform="translate(60, 60)">
-    <!-- Center Circle -->
-    <circle cx="0" cy="0" r="12" fill="#FDBA74"/>
+  <!-- Main flower -->
+  <g transform="translate(60, 60)" filter="url(#shadow)">
+    <!-- Outer petals (larger) -->
+    <ellipse cx="0" cy="-24" rx="10" ry="18" fill="url(#petalGradient)" transform="rotate(0)"/>
+    <ellipse cx="0" cy="-24" rx="10" ry="18" fill="url(#petalGradient)" transform="rotate(72)"/>
+    <ellipse cx="0" cy="-24" rx="10" ry="18" fill="url(#petalGradient)" transform="rotate(144)"/>
+    <ellipse cx="0" cy="-24" rx="10" ry="18" fill="url(#petalGradient)" transform="rotate(216)"/>
+    <ellipse cx="0" cy="-24" rx="10" ry="18" fill="url(#petalGradient)" transform="rotate(288)"/>
     
-    <!-- Petals (5 petals forming a flower) -->
-    <ellipse cx="0" cy="-20" rx="8" ry="14" fill="#FB923C" transform="rotate(0)"/>
-    <ellipse cx="0" cy="-20" rx="8" ry="14" fill="#FB923C" transform="rotate(72)"/>
-    <ellipse cx="0" cy="-20" rx="8" ry="14" fill="#FB923C" transform="rotate(144)"/>
-    <ellipse cx="0" cy="-20" rx="8" ry="14" fill="#FB923C" transform="rotate(216)"/>
-    <ellipse cx="0" cy="-20" rx="8" ry="14" fill="#FB923C" transform="rotate(288)"/>
+    <!-- Inner petals (smaller, lighter) -->
+    <ellipse cx="0" cy="-16" rx="7" ry="12" fill="#FDBA74" opacity="0.9" transform="rotate(36)"/>
+    <ellipse cx="0" cy="-16" rx="7" ry="12" fill="#FDBA74" opacity="0.9" transform="rotate(108)"/>
+    <ellipse cx="0" cy="-16" rx="7" ry="12" fill="#FDBA74" opacity="0.9" transform="rotate(180)"/>
+    <ellipse cx="0" cy="-16" rx="7" ry="12" fill="#FDBA74" opacity="0.9" transform="rotate(252)"/>
+    <ellipse cx="0" cy="-16" rx="7" ry="12" fill="#FDBA74" opacity="0.9" transform="rotate(324)"/>
     
-    <!-- Inner details -->
-    <circle cx="0" cy="0" r="8" fill="#EA580C"/>
-    <circle cx="0" cy="0" r="4" fill="#FDBA74"/>
+    <!-- Center with gradient -->
+    <circle cx="0" cy="0" r="14" fill="url(#centerGradient)"/>
+    <circle cx="0" cy="0" r="10" fill="#FDE047"/>
+    <circle cx="0" cy="0" r="6" fill="#FACC15"/>
+    
+    <!-- Center details (dots) -->
+    <circle cx="-3" cy="-3" r="1.5" fill="#F59E0B" opacity="0.6"/>
+    <circle cx="3" cy="-3" r="1.5" fill="#F59E0B" opacity="0.6"/>
+    <circle cx="0" cy="3" r="1.5" fill="#F59E0B" opacity="0.6"/>
+    <circle cx="-3" cy="3" r="1.5" fill="#F59E0B" opacity="0.6"/>
+    <circle cx="3" cy="3" r="1.5" fill="#F59E0B" opacity="0.6"/>
   </g>
   
-  <!-- Leaf accent -->
-  <path d="M 35 75 Q 30 70 35 65 Q 40 70 35 75" fill="#22C55E" opacity="0.8"/>
-  <path d="M 85 75 Q 90 70 85 65 Q 80 70 85 75" fill="#22C55E" opacity="0.8"/>
-  
-  <!-- Letter M integrated -->
-  <text x="60" y="100" font-family="Arial, sans-serif" font-size="16" font-weight="bold" fill="#EA580C" text-anchor="middle">M</text>
+  <!-- Fresh leaves -->
+  <path d="M 30 70 Q 22 65 28 58 Q 34 65 30 70" fill="#10B981" opacity="0.9"/>
+  <path d="M 90 70 Q 98 65 92 58 Q 86 65 90 70" fill="#10B981" opacity="0.9"/>
+  <path d="M 25 78 Q 18 74 23 68 Q 28 74 25 78" fill="#34D399" opacity="0.8"/>
+  <path d="M 95 78 Q 102 74 97 68 Q 92 74 95 78" fill="#34D399" opacity="0.8"/>
 </svg>
