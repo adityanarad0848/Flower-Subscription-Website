@@ -10,7 +10,7 @@ export default function DesktopLanding() {
       <header className="bg-white shadow-sm sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
           <div className="flex items-center space-x-2">
-            <Flower2 className="h-8 w-8 text-orange-600" />
+            <img src="/logo-icon.svg" alt="Mornify Logo" className="h-10 w-10" />
             <h1 className="text-2xl font-bold text-orange-600">Mornify</h1>
           </div>
           <nav className="hidden md:flex space-x-8 items-center">
@@ -227,7 +227,7 @@ export default function DesktopLanding() {
           <div className="grid md:grid-cols-4 gap-8">
             <div>
               <div className="flex items-center space-x-2 mb-4">
-                <Flower2 className="h-6 w-6" />
+                <img src="/logo-icon.svg" alt="Mornify Logo" className="h-8 w-8" />
                 <h3 className="text-xl font-bold">Mornify</h3>
               </div>
               <p className="text-gray-400">Fresh flowers delivered daily to your doorstep</p>
