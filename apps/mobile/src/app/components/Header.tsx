@@ -13,11 +13,31 @@ export function Header() {
   const location = useLocation();
   const navigate = useNavigate();
   const { items, removeFromCart, totalPrice, totalItems } = useCart();
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const [defaultAddress, setDefaultAddress] = useState<{ id: string; name: string; house_no: string | null; building: string | null; address_line1: string; pincode: string | null } | null>(null);
+  const [profileName, setProfileName] = useState('User');
 
-  const loadAddresses = () => {
-    if (!user) { setDefaultAddress(null); return; }
+  // Load user profile name
+  useEffect(() => {
+    if (!user) return;
+    supabase
+      .from('user_profiles')
+      .select('full_name')
+      .eq('user_id', user.id)
+      .single()
+      .then(({ data }) => {
+        if (data?.full_name) {
+          setProfileName(data.full_name);
+        }
+      });
+  }, [user]);
+
+  // Load addresses
+  useEffect(() => {
+    if (!user) { 
+      setDefaultAddress(null); 
+      return; 
+    }
     supabase
       .from('user_addresses')
       .select('id, name, house_no, building, address_line1, pincode, is_default')
@@ -27,12 +47,7 @@ export function Header() {
         if (error) console.error('Address fetch error:', error);
         setDefaultAddress(data?.find((a: any) => a.is_default) ?? data?.[0] ?? null);
       });
-  };
-
-  useEffect(() => { loadAddresses(); }, [user]);
-
-  // Reload address when returning from select-location page
-  useEffect(() => { loadAddresses(); }, [location.pathname]);
+  }, [user, location.pathname]);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -49,6 +64,11 @@ export function Header() {
       document.removeEventListener('mousedown', handleClickOutside);
     };
   }, [cartDropdownOpen]);
+
+  // Don't render header if auth is still loading (AFTER all hooks)
+  if (authLoading) {
+    return null;
+  }
 
   const navItems = [
     { path: "/", label: "Home" },
@@ -109,9 +129,21 @@ export function Header() {
                 onClick={() => navigate('/account')}
                 className="w-10 h-10 rounded-full bg-gradient-to-br from-orange-500 to-pink-600 text-white font-bold text-lg flex items-center justify-center hover:from-orange-600 hover:to-pink-700 transition-all shadow-lg hover:shadow-xl transform hover:scale-105"
                 aria-label="Account"
-                title={user.email ?? 'My Account'}
+                title={profileName}
               >
-                {(user.user_metadata?.full_name ?? user.email ?? 'U')[0].toUpperCase()}
+                {(() => {
+                  try {
+                    const nameParts = profileName.trim().split(/\s+/);
+                    if (nameParts.length >= 2) {
+                      return (nameParts[0][0] + nameParts[nameParts.length - 1][0]).toUpperCase();
+                    } else if (nameParts.length === 1 && nameParts[0]) {
+                      return nameParts[0][0].toUpperCase();
+                    }
+                    return 'U';
+                  } catch (e) {
+                    return 'U';
+                  }
+                })()}
               </button>
             ) : (
               <button
@@ -211,7 +243,19 @@ export function Header() {
                 className="w-9 h-9 rounded-full bg-gradient-to-br from-orange-500 to-pink-600 text-white font-bold text-sm flex items-center justify-center hover:from-orange-600 hover:to-pink-700 transition-all shadow-lg"
                 aria-label="Account"
               >
-                {(user.user_metadata?.full_name ?? user.email ?? 'U')[0].toUpperCase()}
+                {(() => {
+                  try {
+                    const nameParts = profileName.trim().split(/\s+/);
+                    if (nameParts.length >= 2) {
+                      return (nameParts[0][0] + nameParts[nameParts.length - 1][0]).toUpperCase();
+                    } else if (nameParts.length === 1 && nameParts[0]) {
+                      return nameParts[0][0].toUpperCase();
+                    }
+                    return 'U';
+                  } catch (e) {
+                    return 'U';
+                  }
+                })()}
               </button>
             ) : (
               <button

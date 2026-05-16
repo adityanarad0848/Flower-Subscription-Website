@@ -22,18 +22,69 @@ export function Home() {
   const { addToCart } = useCart();
 
   useEffect(() => {
-    loadProducts();
+    checkAuthAndRedirect();
   }, []);
 
+  useEffect(() => {
+    if (!loading) {
+      loadProducts();
+    }
+  }, [loading]);
+
+  const checkAuthAndRedirect = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) {
+        navigate('/auth/phone', { replace: true });
+        return;
+      }
+
+      const { data: profile } = await supabase
+        .from('user_profiles')
+        .select('phone')
+        .eq('user_id', user.id)
+        .maybeSingle();
+
+      // If no profile exists, create one for Google sign-in users
+      if (!profile) {
+        await supabase.from('user_profiles').insert({
+          user_id: user.id,
+          full_name: user.user_metadata?.full_name || user.user_metadata?.name || user.email?.split('@')[0] || '',
+          phone: user.phone || '',
+          address: ''
+        });
+        await supabase.from('user_wallets').insert({ 
+          user_id: user.id, 
+          balance: 0 
+        });
+      }
+
+      const { data: addresses } = await supabase
+        .from('user_addresses')
+        .select('id')
+        .eq('user_id', user.id)
+        .limit(1);
+
+      if (!addresses || addresses.length === 0) {
+        navigate('/address-map?from=auth', { replace: true });
+        return;
+      }
+
+      setLoading(false);
+    } catch (error) {
+      console.error('Auth check error:', error);
+      navigate('/auth/phone', { replace: true });
+    }
+  };
+
   const loadProducts = async () => {
-    setLoading(true);
     const { data } = await supabase
       .from('products')
       .select('*')
       .eq('is_active', true)
       .order('created_at', { ascending: false });
     setProducts(data || []);
-    setLoading(false);
   };
 
   const handleOneTimePurchase = (product: any) => {
@@ -82,13 +133,19 @@ export function Home() {
 
   return (
     <div>
-      {/* Navratri Special Banner */}
-      <section className="bg-gradient-to-r from-orange-500 to-pink-500">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 text-center">
-          <h1 className="text-2xl sm:text-3xl font-bold text-white mb-1">🔱 Navratri Special 🔱</h1>
-          <p className="text-white/90 text-sm sm:text-base">Divine Flowers for 9 Sacred Nights</p>
+      {loading ? (
+        <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+          <div className="w-8 h-8 border-4 border-orange-400 border-t-transparent rounded-full animate-spin" />
         </div>
-      </section>
+      ) : (
+        <>
+          {/* Navratri Special Banner */}
+          <section className="bg-gradient-to-r from-orange-500 to-pink-500">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 text-center">
+              <h1 className="text-2xl sm:text-3xl font-bold text-white mb-1">🔱 Navratri Special 🔱</h1>
+              <p className="text-white/90 text-sm sm:text-base">Divine Flowers for 9 Sacred Nights</p>
+            </div>
+          </section>
 
       {/* Products Section */}
       <section className="py-8 bg-gray-50">
@@ -112,22 +169,7 @@ export function Home() {
           </div>
           <div className="relative">
               <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
-            {loading ? (
-              // Skeleton Loading
-              Array.from({ length: 8 }).map((_, i) => (
-                <Card key={i} className="overflow-hidden flex flex-col animate-pulse">
-                  <div className="relative aspect-[4/3] bg-gray-200" />
-                  <div className="p-2 flex flex-col gap-2">
-                    <div className="h-4 bg-gray-200 rounded w-3/4" />
-                    <div className="h-3 bg-gray-200 rounded w-1/2" />
-                    <div className="h-3 bg-gray-200 rounded w-full" />
-                    <div className="h-3 bg-gray-200 rounded w-2/3" />
-                    <div className="h-7 bg-gray-200 rounded w-full mt-2" />
-                    <div className="h-8 bg-gray-200 rounded w-full" />
-                  </div>
-                </Card>
-              ))
-            ) : products.filter((product) => {
+            {products.filter((product) => {
               if (!search.trim()) return true;
               const q = search.trim().toLowerCase();
               return (
@@ -228,7 +270,7 @@ export function Home() {
               );
             })}
           </div>
-            {!loading && products.filter((product) => {
+            {products.filter((product) => {
               if (!search.trim()) return true;
               const q = search.trim().toLowerCase();
               return (
@@ -268,6 +310,8 @@ export function Home() {
         duration={selectedDuration}
         onConfirm={handleSubscriptionConfirm}
       />
+        </>
+      )}
     </div>
   );
 }

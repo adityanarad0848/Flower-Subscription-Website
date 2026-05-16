@@ -107,7 +107,7 @@ export default function PaymentHistory() {
                       </Badge>
                     </div>
                     <p className="text-sm text-gray-600 mb-1">
-                      {payment.payment_method.toUpperCase()}
+                      {(payment.payment_method || 'N/A').toUpperCase()}
                     </p>
                     {payment.payment_id && (
                       <p className="text-xs text-gray-500">

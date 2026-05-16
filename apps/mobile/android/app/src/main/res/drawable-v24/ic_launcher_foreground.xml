@@ -4,21 +4,35 @@
     android:viewportWidth="108"
     android:viewportHeight="108">
 
-    <!-- Outer petals — scaled from 40x40 to 108x108 (factor 2.7) -->
-    <!-- Original: cx=20,cy=8 → 54,21.6 -->
-    <path android:pathData="M54,14 m-6.75,0 a6.75,6.75 0 1,0 13.5,0 a6.75,6.75 0 1,0 -13.5,0" android:fillColor="#F97316"/>
-    <path android:pathData="M75.6,29.7 m-6.75,0 a6.75,6.75 0 1,0 13.5,0 a6.75,6.75 0 1,0 -13.5,0" android:fillColor="#EC4899"/>
-    <path android:pathData="M86.4,54 m-6.75,0 a6.75,6.75 0 1,0 13.5,0 a6.75,6.75 0 1,0 -13.5,0" android:fillColor="#8B5CF6"/>
-    <path android:pathData="M75.6,78.3 m-6.75,0 a6.75,6.75 0 1,0 13.5,0 a6.75,6.75 0 1,0 -13.5,0" android:fillColor="#F59E0B"/>
-    <path android:pathData="M54,86.4 m-6.75,0 a6.75,6.75 0 1,0 13.5,0 a6.75,6.75 0 1,0 -13.5,0" android:fillColor="#EF4444"/>
-    <path android:pathData="M32.4,78.3 m-6.75,0 a6.75,6.75 0 1,0 13.5,0 a6.75,6.75 0 1,0 -13.5,0" android:fillColor="#EC4899"/>
-    <path android:pathData="M21.6,54 m-6.75,0 a6.75,6.75 0 1,0 13.5,0 a6.75,6.75 0 1,0 -13.5,0" android:fillColor="#F97316"/>
-    <path android:pathData="M32.4,29.7 m-6.75,0 a6.75,6.75 0 1,0 13.5,0 a6.75,6.75 0 1,0 -13.5,0" android:fillColor="#8B5CF6"/>
+    <!-- Safe zone is 72x72 centered at 54,54 (from 18,18 to 90,90) -->
+    <!-- "Mornify" split into two lines: "Morni" top, "fy" bottom, bold white -->
 
-    <!-- Center sun -->
-    <path android:pathData="M54,54 m-21.6,0 a21.6,21.6 0 1,0 43.2,0 a21.6,21.6 0 1,0 -43.2,0" android:fillColor="#F59E0B"/>
+    <!-- Line 1: "Morni" centered ~y=44 to y=58 -->
 
-    <!-- Inner glow -->
-    <path android:pathData="M54,54 m-13.5,0 a13.5,13.5 0 1,0 27,0 a13.5,13.5 0 1,0 -27,0" android:fillColor="#FEF3C7" android:fillAlpha="0.85"/>
+    <!-- M -->
+    <path android:pathData="M18,44 L18,58 L21,58 L21,50 L25,56 L29,50 L29,58 L32,58 L32,44 L28,44 L25,50 L22,44 Z" android:fillColor="#FFFFFF"/>
+
+    <!-- o -->
+    <path android:pathData="M33,51 a5,5 0 1,0 10,0 a5,5 0 1,0 -10,0" android:fillColor="#FFFFFF"/>
+    <path android:pathData="M36,51 a2,2 0 1,0 4,0 a2,2 0 1,0 -4,0" android:fillColor="#F97316"/>
+
+    <!-- r -->
+    <path android:pathData="M44,46 L44,58 L47,58 L47,52 Q47,49 51,49 L51,46 Q46,46 44,46 Z" android:fillColor="#FFFFFF"/>
+
+    <!-- n -->
+    <path android:pathData="M52,46 L52,58 L55,58 L55,52 Q55,49 58,49 Q61,49 61,52 L61,58 L64,58 L64,51 Q64,46 58,46 Q54,46 52,46 Z" android:fillColor="#FFFFFF"/>
+
+    <!-- i dot -->
+    <path android:pathData="M65,43 a2,2 0 1,0 4,0 a2,2 0 1,0 -4,0" android:fillColor="#FFFFFF"/>
+    <!-- i stem -->
+    <path android:pathData="M65,47 L65,58 L69,58 L69,47 Z" android:fillColor="#FFFFFF"/>
+
+    <!-- Line 2: "fy" centered ~y=62 to y=74 -->
+
+    <!-- f -->
+    <path android:pathData="M38,74 L38,65 L36,65 L36,62 L38,62 L38,60 Q38,55 43,55 L45,55 L45,58 L43.5,58 Q42,58 42,60 L42,62 L45,62 L45,65 L42,65 L42,74 Z" android:fillColor="#FFFFFF"/>
+
+    <!-- y -->
+    <path android:pathData="M47,62 L51,72 L55,62 L59,62 L53,78 Q51,83 47,83 L45,83 L45,80 L47,80 Q49,80 50,77 L50,76 L45,62 Z" android:fillColor="#FFFFFF"/>
 
 </vector>

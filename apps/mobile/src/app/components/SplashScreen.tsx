@@ -56,7 +56,7 @@ export function SplashScreen({ onComplete }: { onComplete: () => void }) {
 
         {/* Brand Name */}
         <h1 className="text-4xl font-bold text-gray-900 mb-2">
-          Evrydayy
+          Mornify
         </h1>
         
         {/* Tagline */}

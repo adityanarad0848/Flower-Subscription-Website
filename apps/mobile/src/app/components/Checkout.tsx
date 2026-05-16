@@ -4,11 +4,11 @@ import { useCart } from '@/app/context/cart';
 import { supabase } from '@/lib/supabase';
 import { Loader, Plus, MapPin, ShoppingBag, ArrowLeft, Lock, ShieldCheck, Wallet } from 'lucide-react';
 import emailjs from '@emailjs/browser';
-import { PaymentService } from '@/payumoney-example';
+import { RazorpayService } from '@/razorpay-service';
 import { Capacitor } from '@capacitor/core';
 
 emailjs.init(import.meta.env.VITE_EMAILJS_PUBLIC_KEY);
-const paymentService = new PaymentService();
+const razorpayService = new RazorpayService();
 
 export default function Checkout() {
   const { items, totalPrice, subtotal, deliveryFee, handlingFee, discount, clearCart } = useCart();
@@ -33,7 +33,11 @@ export default function Checkout() {
 
   useEffect(() => {
     const handleVisibilityChange = () => {
-      if (document.visibilityState === 'visible') loadAddresses();
+      if (document.visibilityState === 'visible') {
+        setError('');
+        setLoading(false);
+        loadAddresses();
+      }
     };
     document.addEventListener('visibilitychange', handleVisibilityChange);
     return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
@@ -89,51 +93,134 @@ export default function Checkout() {
   }
 
   const initiatePayment = async (orderId: string, orderData: any) => {
+    console.log('═══════════════════════════════════════════════════════');
+    console.log('[Checkout] 🚀 INITIATING PAYMENT');
+    console.log('═══════════════════════════════════════════════════════');
+    console.log('[Checkout] Order ID:', orderId);
+    console.log('[Checkout] Order Data:', orderData);
+    console.log('[Checkout] Final Total:', finalTotal);
+    console.log('[Checkout] Amount in Paise:', Math.round(finalTotal * 100));
+    
     const { data: { user } } = await supabase.auth.getUser();
-    if (!user) throw new Error('User not found');
-
-    const isNative = Capacitor.isNativePlatform();
-    if (!isNative) {
-      alert('⚠️ Payment Testing Mode\n\nNative PayU SDK only works on Android app.\n\nOrder will be marked as pending.');
-      await supabase.from('orders').update({ status: 'pending', payment_method: 'payumoney_web_test' }).eq('id', orderData.id);
-      clearCart();
-      navigate('/checkout/success');
-      return;
+    if (!user) {
+      console.error('[Checkout] ❌ ERROR: User not found');
+      throw new Error('User not found');
     }
+    console.log('[Checkout] ✓ User found:', user.id);
+    console.log('[Checkout] User Email:', user.email);
 
     try {
-      const result = await paymentService.initiatePayment({
-        amount: finalTotal.toFixed(2),
-        productInfo: `Order #${orderId} - Flower Subscription`,
-        firstName: selectedAddress?.name || 'Customer',
-        email: user.email || formData.email,
-        phone: selectedAddress?.phone || '0000000000',
-      });
+      const paymentOptions = {
+        amount: Math.round(finalTotal * 100), // Convert to paise
+        currency: 'INR',
+        name: 'Mornify',
+        description: `Order #${orderId.slice(0, 8)} - Fresh Flowers`,
+        prefill: {
+          name: selectedAddress?.name || 'Customer',
+          email: user.email || formData.email,
+          contact: selectedAddress?.phone || '0000000000',
+        },
+        notes: {
+          order_id: orderId,
+          user_id: user.id,
+        },
+      };
+      
+      console.log('[Checkout] 📦 Payment Options:', paymentOptions);
+      console.log('[Checkout] ⏳ Calling razorpayService.initiatePayment()...');
+      
+      const result = await razorpayService.initiatePayment(paymentOptions);
+      
+      console.log('───────────────────────────────────────────────────────');
+      console.log('[Checkout] 📥 Payment Result Received');
+      console.log('[Checkout] Result:', JSON.stringify(result, null, 2));
+      console.log('───────────────────────────────────────────────────────');
 
       if (result.success) {
-        await supabase.from('orders').update({ status: 'completed', payment_id: result.transactionId }).eq('id', orderData.id);
+        console.log('[Checkout] ✅ PAYMENT SUCCESS');
+        console.log('[Checkout] Payment ID:', result.paymentId);
+        console.log('[Checkout] ⏳ Updating order status to completed...');
+        
+        await supabase.from('orders').update({ 
+          status: 'completed', 
+          payment_id: result.paymentId,
+          payment_method: 'razorpay'
+        }).eq('id', orderData.id);
+        
+        console.log('[Checkout] ✓ Order updated successfully');
+        console.log('[Checkout] 🧹 Clearing cart...');
         clearCart();
+        console.log('[Checkout] 🎉 Navigating to success page...');
         navigate('/checkout/success');
       } else {
-        setError(result.message || 'Payment failed');
-        await supabase.from('orders').update({ status: 'failed' }).eq('id', orderData.id);
+        console.log('[Checkout] ❌ PAYMENT FAILED');
+        console.log('[Checkout] Error Message:', result.message);
+        
+        // Don't show error for user cancellation - just clear the error state
+        setError('');
+        console.log('[Checkout] ⏳ Updating order status to cancelled...');
+        await supabase.from('orders').update({ status: 'cancelled' }).eq('id', orderData.id);
+        console.log('[Checkout] ✓ Order status updated to cancelled');
       }
     } catch (err: any) {
-      console.error('Payment error:', err);
-      setError(err.message || 'Payment plugin error. Please try again.');
+      console.log('═══════════════════════════════════════════════════════');
+      console.error('[Checkout] 💥 EXCEPTION CAUGHT IN initiatePayment');
+      console.error('[Checkout] Error Type:', err.constructor?.name);
+      console.error('[Checkout] Error Message:', err.message);
+      console.error('[Checkout] Error Stack:', err.stack);
+      console.error('[Checkout] Full Error:', err);
+      console.log('═══════════════════════════════════════════════════════');
+      setError(err.message || 'Payment error. Please try again.');
       await supabase.from('orders').update({ status: 'failed' }).eq('id', orderData.id);
     } finally {
+      console.log('[Checkout] 🏁 Payment flow completed');
       setLoading(false);
     }
   };
 
   const handlePlaceOrder = async () => {
     if (!selectedAddress) { setError('Please select a delivery address'); return; }
+    
+    // Check if user has verified phone
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      navigate('/auth/phone');
+      return;
+    }
+
+    const { data: profile } = await supabase
+      .from('user_profiles')
+      .select('phone')
+      .eq('user_id', user.id)
+      .maybeSingle();
+
+    if (!profile?.phone) {
+      setError('Please add your phone number for delivery updates');
+      setTimeout(() => navigate('/auth/add-phone'), 2000);
+      return;
+    }
+    
+    console.log('═══════════════════════════════════════════════════════');
+    console.log('[Checkout] 🛒 PLACE ORDER CLICKED');
+    console.log('═══════════════════════════════════════════════════════');
+    console.log('[Checkout] Payment Method:', paymentMethod);
+    console.log('[Checkout] Selected Address:', selectedAddress);
+    console.log('[Checkout] Items:', items);
+    console.log('[Checkout] Total:', totalPrice);
+    console.log('[Checkout] Wallet Deduction:', walletDeduction);
+    console.log('[Checkout] Final Total:', finalTotal);
+    
     setLoading(true);
     setError('');
     try {
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) { setError('Please login to place an order'); setLoading(false); return; }
+      if (!user) { 
+        console.error('[Checkout] ❌ ERROR: User not logged in');
+        setError('Please login to place an order'); 
+        setLoading(false); 
+        return; 
+      }
+      console.log('[Checkout] ✓ User authenticated:', user.id);
 
       const orderPayload = {
         user_id: user.id,
@@ -153,16 +240,25 @@ export default function Checkout() {
         total: finalTotal || 0,
         delivery_date: new Date().toISOString().split('T')[0],
         special_requests: specialRequests || null,
-        payment_method: paymentMethod === 'cod' ? 'cod' : 'payumoney',
+        payment_method: paymentMethod === 'cod' ? 'cod' : 'razorpay',
         status: paymentMethod === 'cod' ? 'confirmed' : 'pending',
         created_at: new Date().toISOString(),
       };
+      
+      console.log('[Checkout] 📦 Order Payload:', orderPayload);
+      console.log('[Checkout] ⏳ Creating order in database...');
 
       const { data: orderData, error: insertError } = await supabase.from('orders').insert(orderPayload).select();
-      if (insertError) { alert('Order creation failed: ' + insertError.message); throw insertError; }
+      if (insertError) { 
+        console.error('[Checkout] ❌ Order creation failed:', insertError);
+        alert('Order creation failed: ' + insertError.message); 
+        throw insertError; 
+      }
+      console.log('[Checkout] ✓ Order created successfully:', orderData[0].id);
 
       // Deduct wallet balance if used
       if (useWallet && walletDeduction > 0) {
+        console.log('[Checkout] 💰 Processing wallet deduction...');
         const { data: walletData } = await supabase
           .from('user_wallets')
           .select('id, balance')
@@ -178,11 +274,13 @@ export default function Checkout() {
             type: 'debit',
             description: `Used for order #${orderData[0].id.slice(0, 8)}`,
           });
+          console.log('[Checkout] ✓ Wallet deducted:', walletDeduction);
         }
       }
 
       const subscriptionItems = items.filter(item => item.subscription);
       if (subscriptionItems.length > 0) {
+        console.log('[Checkout] 📅 Processing subscriptions...');
         // First, deactivate any existing active subscriptions for the same products
         const productIds = subscriptionItems.map(item => item.productId).filter(Boolean);
         if (productIds.length > 0) {
@@ -213,16 +311,23 @@ export default function Checkout() {
           };
         });
         await supabase.from('user_subscriptions').insert(subscriptions);
+        console.log('[Checkout] ✓ Subscriptions created');
       }
 
       if (paymentMethod === 'cod') {
+        console.log('[Checkout] 💵 COD selected - completing order');
         clearCart();
         navigate('/checkout/success');
         return;
       }
 
+      console.log('[Checkout] 💳 Online payment selected - initiating payment...');
       await initiatePayment(orderData[0].id, orderData[0]);
     } catch (err: any) {
+      console.log('═══════════════════════════════════════════════════════');
+      console.error('[Checkout] 💥 EXCEPTION CAUGHT IN handlePlaceOrder');
+      console.error('[Checkout] Error:', err);
+      console.log('═══════════════════════════════════════════════════════');
       setError(err.message || 'Failed to place order. Please try again.');
       setLoading(false);
     }
@@ -403,7 +508,7 @@ export default function Checkout() {
                   </div>
                   <div className="flex-1">
                     <p className="text-sm font-semibold text-gray-900">Online Payment</p>
-                    <p className="text-xs text-gray-400">UPI, Cards, Net Banking via PayU</p>
+                    <p className="text-xs text-gray-400">UPI, Cards, Net Banking via Razorpay</p>
                   </div>
                   <div className="flex gap-1">
                     <span className="text-lg">💳</span>

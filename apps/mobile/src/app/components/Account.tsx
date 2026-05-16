@@ -56,8 +56,7 @@ export default function Account() {
   const [editMode, setEditMode] = useState(false);
   const [editedProfile, setEditedProfile] = useState({
     full_name: '',
-    phone: '',
-    address: ''
+    phone: ''
   });
 
   useEffect(() => {
@@ -92,8 +91,7 @@ export default function Account() {
     if (profileData) {
       setEditedProfile({
         full_name: profileData.full_name || '',
-        phone: profileData.phone || '',
-        address: profileData.address || ''
+        phone: profileData.phone || ''
       });
     }
     
@@ -216,7 +214,6 @@ export default function Account() {
         user_id: user.id,
         full_name: editedProfile.full_name,
         phone: editedProfile.phone,
-        address: editedProfile.address,
         updated_at: new Date().toISOString()
       });
     
@@ -234,8 +231,7 @@ export default function Account() {
     if (profile) {
       setEditedProfile({
         full_name: profile.full_name || '',
-        phone: profile.phone || '',
-        address: profile.address || ''
+        phone: profile.phone || ''
       });
     }
   };
@@ -354,7 +350,7 @@ export default function Account() {
                 </div>
                 <div>
                   <p className="text-xs text-gray-500 uppercase tracking-wide mb-1">Email</p>
-                  <p className="text-base text-gray-900">{user.email}</p>
+                  <p className="text-base text-gray-900">{user.email || 'Not set'}</p>
                 </div>
                 <div>
                   <p className="text-xs text-gray-500 uppercase tracking-wide mb-1">Phone</p>
@@ -368,20 +364,6 @@ export default function Account() {
                     />
                   ) : (
                     <p className="text-base text-gray-900">{profile?.phone || 'Not set'}</p>
-                  )}
-                </div>
-                <div>
-                  <p className="text-xs text-gray-500 uppercase tracking-wide mb-1">Address</p>
-                  {editMode ? (
-                    <textarea
-                      value={editedProfile.address}
-                      onChange={(e) => setEditedProfile({ ...editedProfile, address: e.target.value })}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-                      placeholder="Enter your address"
-                      rows={3}
-                    />
-                  ) : (
-                    <p className="text-base text-gray-900">{profile?.address || 'Not set'}</p>
                   )}
                 </div>
                 

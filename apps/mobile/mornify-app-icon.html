@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mornify - Mobile App Icon Generator</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #F97316 0%, #EC4899 100%);
+            min-height: 100vh;
+            padding: 40px 20px;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 24px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        h1 {
+            text-align: center;
+            color: #1a1a1a;
+            margin-bottom: 10px;
+            font-size: 36px;
+        }
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 40px;
+            font-size: 16px;
+        }
+        .preview-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 30px;
+            margin-bottom: 40px;
+        }
+        .preview-item {
+            text-align: center;
+            padding: 20px;
+            background: #f9fafb;
+            border-radius: 16px;
+            transition: transform 0.3s ease;
+        }
+        .preview-item:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+        .preview-label {
+            font-size: 12px;
+            color: #888;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 15px;
+        }
+        .icon-wrapper {
+            display: inline-block;
+            border-radius: 20%;
+            overflow: hidden;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+            margin-bottom: 10px;
+        }
+        .size-info {
+            font-size: 14px;
+            color: #666;
+            margin-top: 10px;
+        }
+        .download-section {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 40px;
+            border-radius: 16px;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .download-section h2 {
+            color: white;
+            margin-bottom: 20px;
+            font-size: 28px;
+        }
+        .download-buttons {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        .btn {
+            padding: 16px 32px;
+            border-radius: 12px;
+            border: none;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .btn-primary {
+            background: white;
+            color: #667eea;
+        }
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(255,255,255,0.3);
+        }
+        .specs-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-top: 30px;
+        }
+        .spec-card {
+            background: #f9fafb;
+            padding: 25px;
+            border-radius: 12px;
+            border-left: 4px solid #F97316;
+        }
+        .spec-card h3 {
+            color: #333;
+            margin-bottom: 15px;
+            font-size: 18px;
+        }
+        .spec-card ul {
+            list-style: none;
+            color: #666;
+            line-height: 2;
+        }
+        .spec-card li:before {
+            content: "✓ ";
+            color: #10b981;
+            font-weight: bold;
+            margin-right: 8px;
+        }
+        .adaptive-preview {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            align-items: center;
+            margin: 30px 0;
+            padding: 30px;
+            background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+            border-radius: 16px;
+        }
+        .adaptive-item {
+            text-align: center;
+        }
+        .adaptive-label {
+            font-size: 12px;
+            color: #92400e;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🌸 Mornify App Icon</h1>
+        <p class="subtitle">Professional mobile app icons for Android - All sizes included</p>
+
+        <div class="adaptive-preview">
+            <div class="adaptive-item">
+                <div class="adaptive-label">FOREGROUND</div>
+                <canvas id="foreground" width="432" height="432" style="border-radius: 20%; box-shadow: 0 4px 12px rgba(0,0,0,0.1);"></canvas>
+            </div>
+            <div class="adaptive-item">
+                <div class="adaptive-label">BACKGROUND</div>
+                <canvas id="background" width="432" height="432" style="border-radius: 20%; box-shadow: 0 4px 12px rgba(0,0,0,0.1);"></canvas>
+            </div>
+            <div class="adaptive-item">
+                <div class="adaptive-label">COMBINED</div>
+                <canvas id="combined" width="432" height="432" style="border-radius: 20%; box-shadow: 0 4px 12px rgba(0,0,0,0.1);"></canvas>
+            </div>
+        </div>
+
+        <div class="preview-grid">
+            <div class="preview-item">
+                <div class="preview-label">MDPI (48px)</div>
+                <div class="icon-wrapper">
+                    <canvas id="icon-48" width="48" height="48"></canvas>
+                </div>
+                <div class="size-info">48 × 48 px</div>
+            </div>
+            <div class="preview-item">
+                <div class="preview-label">HDPI (72px)</div>
+                <div class="icon-wrapper">
+                    <canvas id="icon-72" width="72" height="72"></canvas>
+                </div>
+                <div class="size-info">72 × 72 px</div>
+            </div>
+            <div class="preview-item">
+                <div class="preview-label">XHDPI (96px)</div>
+                <div class="icon-wrapper">
+                    <canvas id="icon-96" width="96" height="96"></canvas>
+                </div>
+                <div class="size-info">96 × 96 px</div>
+            </div>
+            <div class="preview-item">
+                <div class="preview-label">XXHDPI (144px)</div>
+                <div class="icon-wrapper">
+                    <canvas id="icon-144" width="144" height="144"></canvas>
+                </div>
+                <div class="size-info">144 × 144 px</div>
+            </div>
+            <div class="preview-item">
+                <div class="preview-label">XXXHDPI (192px)</div>
+                <div class="icon-wrapper">
+                    <canvas id="icon-192" width="192" height="192"></canvas>
+                </div>
+                <div class="size-info">192 × 192 px</div>
+            </div>
+            <div class="preview-item">
+                <div class="preview-label">PLAY STORE (512px)</div>
+                <div class="icon-wrapper">
+                    <canvas id="icon-512" width="512" height="512"></canvas>
+                </div>
+                <div class="size-info">512 × 512 px</div>
+            </div>
+        </div>
+
+        <div class="download-section">
+            <h2>📥 Download All Icon Sizes</h2>
+            <div class="download-buttons">
+                <button class="btn btn-primary" onclick="downloadAllIcons()">
+                    <span style="font-size: 20px;">⬇</span> Download All Android Icons (ZIP)
+                </button>
+                <button class="btn btn-primary" onclick="downloadPlayStoreIcon()">
+                    <span style="font-size: 20px;">🎮</span> Download Play Store Icon (512px)
+                </button>
+            </div>
+        </div>
+
+        <div class="specs-grid">
+            <div class="spec-card">
+                <h3>📱 Android Icon Sizes</h3>
+                <ul>
+                    <li>MDPI: 48×48px (mipmap-mdpi)</li>
+                    <li>HDPI: 72×72px (mipmap-hdpi)</li>
+                    <li>XHDPI: 96×96px (mipmap-xhdpi)</li>
+                    <li>XXHDPI: 144×144px (mipmap-xxhdpi)</li>
+                    <li>XXXHDPI: 192×192px (mipmap-xxxhdpi)</li>
+                    <li>Play Store: 512×512px</li>
+                </ul>
+            </div>
+            <div class="spec-card">
+                <h3>🎨 Design Features</h3>
+                <ul>
+                    <li>Adaptive icon support</li>
+                    <li>Gradient background</li>
+                    <li>Colorful flower petals</li>
+                    <li>Golden sun center</li>
+                    <li>High contrast colors</li>
+                    <li>Professional finish</li>
+                </ul>
+            </div>
+            <div class="spec-card">
+                <h3>📂 File Locations</h3>
+                <ul>
+                    <li>android/app/src/main/res/</li>
+                    <li>mipmap-mdpi/ic_launcher.png</li>
+                    <li>mipmap-hdpi/ic_launcher.png</li>
+                    <li>mipmap-xhdpi/ic_launcher.png</li>
+                    <li>mipmap-xxhdpi/ic_launcher.png</li>
+                    <li>mipmap-xxxhdpi/ic_launcher.png</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <script>
+        function drawIcon(canvas, size) {
+            const ctx = canvas.getContext('2d');
+            const scale = size / 40;
+            
+            // Clear canvas
+            ctx.clearRect(0, 0, size, size);
+            
+            // Background gradient
+            const bgGradient = ctx.createLinearGradient(0, 0, size, size);
+            bgGradient.addColorStop(0, '#F97316');
+            bgGradient.addColorStop(1, '#EC4899');
+            ctx.fillStyle = bgGradient;
+            ctx.fillRect(0, 0, size, size);
+            
+            // Draw petals
+            const petals = [
+                { x: 20, y: 8, color: '#FEF3C7' },
+                { x: 28, y: 11, color: '#FDE68A' },
+                { x: 32, y: 20, color: '#FCD34D' },
+                { x: 28, y: 29, color: '#FBBF24' },
+                { x: 20, y: 32, color: '#F59E0B' },
+                { x: 12, y: 29, color: '#FDE68A' },
+                { x: 8, y: 20, color: '#FEF3C7' },
+                { x: 12, y: 11, color: '#FCD34D' }
+            ];
+            
+            petals.forEach(petal => {
+                ctx.beginPath();
+                ctx.arc(petal.x * scale, petal.y * scale, 2.5 * scale, 0, Math.PI * 2);
+                ctx.fillStyle = petal.color;
+                ctx.fill();
+            });
+            
+            // Center sun gradient
+            const sunGradient = ctx.createRadialGradient(
+                20 * scale, 20 * scale, 0,
+                20 * scale, 20 * scale, 8 * scale
+            );
+            sunGradient.addColorStop(0, '#FDE047');
+            sunGradient.addColorStop(1, '#F59E0B');
+            
+            ctx.beginPath();
+            ctx.arc(20 * scale, 20 * scale, 8 * scale, 0, Math.PI * 2);
+            ctx.fillStyle = sunGradient;
+            ctx.fill();
+            
+            // Inner glow
+            ctx.beginPath();
+            ctx.arc(20 * scale, 20 * scale, 5 * scale, 0, Math.PI * 2);
+            ctx.fillStyle = 'rgba(254, 243, 199, 0.9)';
+            ctx.fill();
+        }
+
+        function drawForeground(canvas) {
+            const ctx = canvas.getContext('2d');
+            const size = 432;
+            const scale = size / 40;
+            
+            ctx.clearRect(0, 0, size, size);
+            
+            // Draw petals
+            const petals = [
+                { x: 20, y: 8, color: '#FEF3C7' },
+                { x: 28, y: 11, color: '#FDE68A' },
+                { x: 32, y: 20, color: '#FCD34D' },
+                { x: 28, y: 29, color: '#FBBF24' },
+                { x: 20, y: 32, color: '#F59E0B' },
+                { x: 12, y: 29, color: '#FDE68A' },
+                { x: 8, y: 20, color: '#FEF3C7' },
+                { x: 12, y: 11, color: '#FCD34D' }
+            ];
+            
+            petals.forEach(petal => {
+                ctx.beginPath();
+                ctx.arc(petal.x * scale, petal.y * scale, 2.5 * scale, 0, Math.PI * 2);
+                ctx.fillStyle = petal.color;
+                ctx.fill();
+            });
+            
+            // Center sun
+            const sunGradient = ctx.createRadialGradient(
+                20 * scale, 20 * scale, 0,
+                20 * scale, 20 * scale, 8 * scale
+            );
+            sunGradient.addColorStop(0, '#FDE047');
+            sunGradient.addColorStop(1, '#F59E0B');
+            
+            ctx.beginPath();
+            ctx.arc(20 * scale, 20 * scale, 8 * scale, 0, Math.PI * 2);
+            ctx.fillStyle = sunGradient;
+            ctx.fill();
+            
+            ctx.beginPath();
+            ctx.arc(20 * scale, 20 * scale, 5 * scale, 0, Math.PI * 2);
+            ctx.fillStyle = 'rgba(254, 243, 199, 0.9)';
+            ctx.fill();
+        }
+
+        function drawBackground(canvas) {
+            const ctx = canvas.getContext('2d');
+            const size = 432;
+            
+            const gradient = ctx.createLinearGradient(0, 0, size, size);
+            gradient.addColorStop(0, '#F97316');
+            gradient.addColorStop(1, '#EC4899');
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, 0, size, size);
+        }
+
+        function drawCombined(canvas) {
+            const ctx = canvas.getContext('2d');
+            drawBackground(canvas);
+            drawForeground(canvas);
+        }
+
+        // Initialize all canvases
+        window.onload = function() {
+            [48, 72, 96, 144, 192, 512].forEach(size => {
+                const canvas = document.getElementById(`icon-${size}`);
+                drawIcon(canvas, size);
+            });
+            
+            drawForeground(document.getElementById('foreground'));
+            drawBackground(document.getElementById('background'));
+            drawCombined(document.getElementById('combined'));
+        };
+
+        async function downloadAllIcons() {
+            const zip = new JSZip();
+            const sizes = [
+                { size: 48, folder: 'mipmap-mdpi' },
+                { size: 72, folder: 'mipmap-hdpi' },
+                { size: 96, folder: 'mipmap-xhdpi' },
+                { size: 144, folder: 'mipmap-xxhdpi' },
+                { size: 192, folder: 'mipmap-xxxhdpi' }
+            ];
+
+            for (const { size, folder } of sizes) {
+                const canvas = document.createElement('canvas');
+                canvas.width = size;
+                canvas.height = size;
+                drawIcon(canvas, size);
+                
+                const blob = await new Promise(resolve => canvas.toBlob(resolve));
+                zip.folder(folder).file('ic_launcher.png', blob);
+                zip.folder(folder).file('ic_launcher_round.png', blob);
+            }
+
+            // Add foreground
+            const fgCanvas = document.createElement('canvas');
+            fgCanvas.width = 432;
+            fgCanvas.height = 432;
+            drawForeground(fgCanvas);
+            const fgBlob = await new Promise(resolve => fgCanvas.toBlob(resolve));
+            
+            sizes.forEach(({ folder }) => {
+                zip.folder(folder).file('ic_launcher_foreground.png', fgBlob);
+            });
+
+            // Generate and download
+            const content = await zip.generateAsync({ type: 'blob' });
+            const url = URL.createObjectURL(content);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'mornify-android-icons.zip';
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        async function downloadPlayStoreIcon() {
+            const canvas = document.getElementById('icon-512');
+            canvas.toBlob(blob => {
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'mornify-playstore-512px.png';
+                a.click();
+                URL.revokeObjectURL(url);
+            });
+        }
+    </script>
+</body>
+</html>

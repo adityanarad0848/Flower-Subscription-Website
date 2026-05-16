@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Supabase Test</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+  <h1>Supabase Connection Test</h1>
+  <button onclick="testConnection()">Test Connection</button>
+  <div id="result" style="margin-top: 20px; padding: 20px; background: #f0f0f0;"></div>
+
+  <script>
+    const SUPABASE_URL = 'https://dzytzztohlvjwdsfhoua.supabase.co';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImR6eXR6enRvaGx2andkc2Zob3VhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzEwMDExNTYsImV4cCI6MjA4NjU3NzE1Nn0.x15xhhR1a3yl0zbxp3BqTpxLOInldOD76Xlt-RLRxwY';
+    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    async function testConnection() {
+      const resultDiv = document.getElementById('result');
+      resultDiv.innerHTML = 'Loading...';
+
+      try {
+        const { data, error } = await supabase
+          .from('support_messages')
+          .select('*');
+
+        if (error) {
+          resultDiv.innerHTML = `
+            <h3 style="color: red;">Error:</h3>
+            <pre>${JSON.stringify(error, null, 2)}</pre>
+          `;
+        } else {
+          resultDiv.innerHTML = `
+            <h3 style="color: green;">Success! Found ${data.length} messages:</h3>
+            <pre>${JSON.stringify(data, null, 2)}</pre>
+          `;
+        }
+      } catch (err) {
+        resultDiv.innerHTML = `
+          <h3 style="color: red;">Exception:</h3>
+          <pre>${err.message}</pre>
+        `;
+      }
+    }
+  </script>
+</body>
+</html>

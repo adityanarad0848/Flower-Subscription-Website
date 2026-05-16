@@ -45,20 +45,26 @@ export default function AddressMap() {
   const [label, setLabel] = useState<'Home' | 'Work' | 'Other'>('Home');
   const [customLabel, setCustomLabel] = useState('');
   const [floor, setFloor] = useState('');
-  const [phone, setPhone] = useState('');
   const [name, setName] = useState('');
   const [saving, setSaving] = useState(false);
   const [locating, setLocating] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [suggestions, setSuggestions] = useState<any[]>([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const autocompleteService = useRef<any>(null);
+  const debounceTimer = useRef<any>(null);
 
   // Load Google Maps
   useEffect(() => {
-    const initMap = () => setMapsReady(true);
-    if ((window as any).google?.maps) { initMap(); return; }
+    const initMap = () => {
+      setMapsReady(true);
+      autocompleteService.current = new (window as any).google.maps.places.AutocompleteService();
+    };
+    if ((window as any).google?.maps?.places) { initMap(); return; }
     const key = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
-    // If script already injected, wait for it
     const existing = document.querySelector('script[data-gmap]') as HTMLScriptElement | null;
     if (existing) {
-      if ((window as any).google?.maps) { initMap(); }
+      if ((window as any).google?.maps?.places) { initMap(); }
       else existing.addEventListener('load', initMap);
       return;
     }
@@ -69,6 +75,22 @@ export default function AddressMap() {
     s.onload = initMap;
     document.head.appendChild(s);
   }, []);
+
+  // Load user profile name on mount
+  useEffect(() => {
+    if (!user) return;
+    const loadUserProfile = async () => {
+      const { data } = await supabase
+        .from('user_profiles')
+        .select('full_name')
+        .eq('user_id', user.id)
+        .single();
+      if (data?.full_name) {
+        setName(data.full_name);
+      }
+    };
+    loadUserProfile();
+  }, [user]);
 
   // Init map once ready
   useEffect(() => {
@@ -179,12 +201,15 @@ export default function AddressMap() {
       .single();
     
     if (data && !error) {
-      setName(data.name || '');
-      setPhone(data.phone || '');
       setFloor(data.address_line2 || '');
       setLabel(data.name === 'Home' || data.name === 'Work' ? data.name : 'Other');
       if (data.name !== 'Home' && data.name !== 'Work') {
         setCustomLabel(data.name);
+      }
+      
+      // Populate search query with the saved building/search term
+      if (data.building) {
+        setSearchQuery(data.building);
       }
       
       if (data.latitude && data.longitude) {
@@ -231,17 +256,60 @@ export default function AddressMap() {
     );
   };
 
+  const handleSearchChange = (val: string) => {
+    setSearchQuery(val);
+    setSuggestions([]);
+    setShowSuggestions(false);
+    if (!val.trim() || val.trim().length < 2 || !autocompleteService.current) return;
+    clearTimeout(debounceTimer.current);
+    debounceTimer.current = setTimeout(() => {
+      autocompleteService.current.getPlacePredictions(
+        {
+          input: val,
+          componentRestrictions: { country: 'in' },
+          bounds: new (window as any).google.maps.LatLngBounds(
+            new (window as any).google.maps.LatLng(18.4089, 73.7797),
+            new (window as any).google.maps.LatLng(18.6793, 74.0865)
+          ),
+        },
+        (predictions: any[], status: string) => {
+          if (status === 'OK' && predictions?.length) {
+            setSuggestions(predictions);
+            setShowSuggestions(true);
+          } else {
+            setSuggestions([]);
+            setShowSuggestions(false);
+          }
+        }
+      );
+    }, 300);
+  };
+
+  const handleSuggestionPick = (s: any) => {
+    setSearchQuery(s.structured_formatting?.main_text ?? s.description.split(',')[0]);
+    setSuggestions([]);
+    setShowSuggestions(false);
+    
+    const google = (window as any).google;
+    const service = new google.maps.places.PlacesService(mapInstance.current);
+    service.getDetails({ placeId: s.place_id, fields: ['geometry'] }, (place: any, status: string) => {
+      if (status === 'OK' && place.geometry?.location) {
+        const newPin = { lat: place.geometry.location.lat(), lng: place.geometry.location.lng() };
+        setPin(newPin);
+        mapInstance.current.panTo(newPin);
+        mapInstance.current.setZoom(17);
+        markerRef.current.setPosition(newPin);
+        reverseGeocode(newPin);
+      }
+    });
+  };
+
   const handleSave = async () => {
     if (!user || saving) return;
     
     // Validate required fields
     if (!name.trim()) {
-      alert('Please enter your name');
-      return;
-    }
-    
-    if (!phone.trim() || phone.length < 10) {
-      alert('Please enter a valid phone number (at least 10 digits)');
+      alert('Please enter your profile name');
       return;
     }
     
@@ -252,15 +320,31 @@ export default function AddressMap() {
       return d < calcDistance(pin.lat, pin.lng, closest.lat, closest.lng) ? area : closest;
     }, SERVICEABLE_AREAS[0]).name}, Pune`;
 
+    // Update user profile with name
+    const { error: profileError } = await supabase.from('user_profiles').upsert({
+      user_id: user.id,
+      full_name: name.trim(),
+      updated_at: new Date().toISOString(),
+    }, {
+      onConflict: 'user_id'
+    });
+
+    if (profileError) {
+      console.error('Profile update error:', profileError);
+      alert(`Could not save profile: ${profileError.message}`);
+      setSaving(false);
+      return;
+    }
+
     if (editAddressId) {
       // Update existing address
       const { error } = await supabase
         .from('user_addresses')
         .update({
           name: finalName,
-          phone: phone,
           address_line1: resolvedAddress,
           address_line2: floor || null,
+          building: searchQuery.trim() || null,
           city: 'Pune',
           state: 'Maharashtra',
           pincode: pincode || null,
@@ -296,9 +380,9 @@ export default function AddressMap() {
       const { error } = await supabase.from('user_addresses').insert({
         user_id: user.id,
         name: finalName,
-        phone: phone,
         address_line1: resolvedAddress,
         address_line2: floor || null,
+        building: searchQuery.trim() || null,
         city: 'Pune',
         state: 'Maharashtra',
         pincode: pincode || null,
@@ -317,10 +401,13 @@ export default function AddressMap() {
     }
     
     setSaving(false);
+    const fromAuth = searchParams.get('from') === 'auth';
     if (fromCheckout) {
-      navigate('/checkout');
+      navigate('/checkout', { replace: true });
+    } else if (fromAuth) {
+      navigate('/', { replace: true });
     } else {
-      navigate('/select-location');
+      navigate('/select-location', { replace: true });
     }
   };
 
@@ -409,28 +496,55 @@ export default function AddressMap() {
           )}
         </div>
 
-        {/* Floor / flat */}
+        {/* Profile Name */}
         <input
           type="text"
           value={name}
           onChange={e => setName(e.target.value)}
-          placeholder="Full Name *"
+          placeholder="Profile Name *"
           className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400"
         />
 
-        <input
-          type="tel"
-          value={phone}
-          onChange={e => setPhone(e.target.value)}
-          placeholder="Phone Number * (10 digits)"
-          className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400"
-        />
+        {/* Search box with autocomplete dropdown */}
+        <div className="relative">
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={e => handleSearchChange(e.target.value)}
+            onFocus={() => suggestions.length > 0 && setShowSuggestions(true)}
+            placeholder="Search for area, street, building..."
+            className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400"
+          />
+          {showSuggestions && suggestions.length > 0 && (
+            <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-xl shadow-xl z-50 overflow-hidden max-h-60 overflow-y-auto">
+              {suggestions.map((s: any, i: number) => (
+                <button
+                  key={s.place_id}
+                  onMouseDown={() => handleSuggestionPick(s)}
+                  className={`w-full flex items-start gap-3 px-4 py-3 text-left active:bg-orange-50 ${
+                    i < suggestions.length - 1 ? 'border-b border-gray-100' : ''
+                  }`}
+                >
+                  <MapPin className="w-4 h-4 text-orange-400 shrink-0 mt-0.5" />
+                  <div className="min-w-0">
+                    <p className="text-sm font-semibold text-gray-900 truncate">
+                      {s.structured_formatting?.main_text ?? s.description.split(',')[0]}
+                    </p>
+                    <p className="text-xs text-gray-400 truncate">
+                      {s.structured_formatting?.secondary_text ?? s.description}
+                    </p>
+                  </div>
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
 
         <input
           type="text"
           value={floor}
           onChange={e => setFloor(e.target.value)}
-          placeholder="Flat / Floor / Building (optional)"
+          placeholder="House No, Floor, Building (optional)"
           className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400"
         />
 
@@ -466,9 +580,9 @@ export default function AddressMap() {
         {/* Save button */}
         <button
           onClick={handleSave}
-          disabled={saving || !name.trim() || !phone.trim() || phone.length < 10}
+          disabled={saving || !name.trim()}
           className={`w-full py-3 rounded-xl text-sm font-bold transition-colors ${
-            serviceable !== false && name.trim() && phone.trim() && phone.length >= 10
+            serviceable !== false && name.trim()
               ? 'bg-orange-500 text-white active:bg-orange-600'
               : 'bg-gray-200 text-gray-400 cursor-not-allowed'
           }`}

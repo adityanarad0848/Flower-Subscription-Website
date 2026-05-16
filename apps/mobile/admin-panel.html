@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mornify Support Admin</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f5f5f5; }
+    .container { max-width: 1200px; margin: 0 auto; padding: 20px; }
+    .header { background: linear-gradient(135deg, #ff6b6b, #ff8e53); color: white; padding: 20px; border-radius: 12px; margin-bottom: 20px; }
+    .conversations { display: grid; grid-template-columns: 300px 1fr; gap: 20px; }
+    .users-list { background: white; border-radius: 12px; padding: 15px; height: calc(100vh - 200px); overflow-y: auto; }
+    .user-item { padding: 12px; border-radius: 8px; cursor: pointer; margin-bottom: 8px; border: 1px solid #e0e0e0; }
+    .user-item:hover { background: #f9f9f9; }
+    .user-item.active { background: #fff3e0; border-color: #ff6b6b; }
+    .chat-area { background: white; border-radius: 12px; padding: 20px; height: calc(100vh - 200px); display: flex; flex-direction: column; }
+    .messages { flex: 1; overflow-y: auto; margin-bottom: 20px; padding: 10px; }
+    .message { margin-bottom: 15px; }
+    .message-bubble { display: inline-block; padding: 10px 15px; border-radius: 8px; max-width: 70%; background: white; border: 1px solid #e0e0e0; color: #333; }
+    .message-time { font-size: 11px; color: #999; margin-top: 4px; }
+    .reply-box { display: flex; gap: 10px; }
+    .reply-box input { flex: 1; padding: 12px; border: 1px solid #ddd; border-radius: 24px; outline: none; }
+    .reply-box button { padding: 12px 24px; background: linear-gradient(135deg, #ff6b6b, #ff8e53); color: white; border: none; border-radius: 24px; cursor: pointer; font-weight: 600; }
+    .reply-box button:hover { opacity: 0.9; }
+    .reply-box button:disabled { opacity: 0.5; cursor: not-allowed; }
+    .user-name { font-weight: 600; color: #333; }
+    .user-phone { font-size: 12px; color: #666; margin-top: 2px; }
+    .status { padding: 10px; text-align: center; color: #666; font-size: 12px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>🌺 Mornify Support Admin</h1>
+      <p>Manage customer support conversations</p>
+    </div>
+    
+    <div class="conversations">
+      <div class="users-list" id="usersList">
+        <p class="status">Loading conversations...</p>
+      </div>
+      
+      <div class="chat-area">
+        <div id="chatHeader" style="margin-bottom: 15px; padding-bottom: 15px; border-bottom: 2px solid #f0f0f0;">
+          <p style="color: #999;">Select a conversation to start</p>
+        </div>
+        <div class="messages" id="messagesArea"></div>
+        <div class="reply-box">
+          <input type="text" id="replyInput" placeholder="Type your reply..." disabled>
+          <button id="sendBtn" disabled>Send</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const SUPABASE_URL = 'https://dzytzztohlvjwdsfhoua.supabase.co';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImR6eXR6enRvaGx2andkc2Zob3VhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzEwMDExNTYsImV4cCI6MjA4NjU3NzE1Nn0.x15xhhR1a3yl0zbxp3BqTpxLOInldOD76Xlt-RLRxwY';
+
+    let currentUserId = null;
+    let conversations = {};
+
+    async function loadConversations() {
+      try {
+        const response = await fetch(`${SUPABASE_URL}/rest/v1/support_messages?select=*&order=created_at.desc`, {
+          headers: {
+            'apikey': SUPABASE_ANON_KEY,
+            'Authorization': `Bearer ${SUPABASE_ANON_KEY}`
+          }
+        });
+
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+
+        const data = await response.json();
+        
+        if (!data || data.length === 0) {
+          document.getElementById('usersList').innerHTML = '<p class="status">No messages yet</p>';
+          return;
+        }
+
+        // Group by user_id
+        conversations = {};
+        data.forEach(msg => {
+          if (!conversations[msg.user_id]) {
+            conversations[msg.user_id] = {
+              userId: msg.user_id,
+              userName: msg.user_name || 'User',
+              userPhone: msg.user_phone || '',
+              messages: [],
+              lastMessage: msg.created_at
+            };
+          }
+          conversations[msg.user_id].messages.push(msg);
+        });
+
+        // Sort messages within each conversation
+        Object.values(conversations).forEach(conv => {
+          conv.messages.sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
+        });
+
+        renderUsersList();
+      } catch (error) {
+        console.error('Load error:', error);
+        document.getElementById('usersList').innerHTML = `<p class="status" style="color: red;">Error: ${error.message}</p>`;
+      }
+    }
+
+    function renderUsersList() {
+      const usersList = document.getElementById('usersList');
+      const users = Object.values(conversations).sort((a, b) => 
+        new Date(b.lastMessage) - new Date(a.lastMessage)
+      );
+
+      if (users.length === 0) {
+        usersList.innerHTML = '<p class="status">No conversations</p>';
+        return;
+      }
+
+      usersList.innerHTML = users.map(user => `
+        <div class="user-item" data-user-id="${user.userId}">
+          <div class="user-name">${user.userName}</div>
+          <div class="user-phone">${user.userPhone}</div>
+        </div>
+      `).join('');
+
+      // Add click handlers
+      document.querySelectorAll('.user-item').forEach(item => {
+        item.addEventListener('click', () => selectUser(item.dataset.userId));
+      });
+    }
+
+    function selectUser(userId) {
+      currentUserId = userId;
+      const user = conversations[userId];
+      
+      // Update active state
+      document.querySelectorAll('.user-item').forEach(el => el.classList.remove('active'));
+      document.querySelector(`[data-user-id="${userId}"]`).classList.add('active');
+
+      // Update chat header
+      document.getElementById('chatHeader').innerHTML = `
+        <div class="user-name">${user.userName}</div>
+        <div class="user-phone">${user.userPhone}</div>
+      `;
+
+      // Render messages
+      renderMessages(user.messages);
+
+      // Enable reply
+      document.getElementById('replyInput').disabled = false;
+      document.getElementById('sendBtn').disabled = false;
+    }
+
+    function renderMessages(messages) {
+      const messagesArea = document.getElementById('messagesArea');
+      messagesArea.innerHTML = messages.map(msg => {
+        // Convert UTC to IST (UTC + 5:30)
+        const utcDate = new Date(msg.created_at);
+        const istDate = new Date(utcDate.getTime() + (5.5 * 60 * 60 * 1000));
+        
+        const timeString = istDate.toLocaleTimeString('en-IN', { 
+          hour: '2-digit', 
+          minute: '2-digit',
+          hour12: true,
+          timeZone: 'Asia/Kolkata'
+        });
+        const dateString = istDate.toLocaleDateString('en-IN', {
+          day: 'numeric',
+          month: 'short',
+          timeZone: 'Asia/Kolkata'
+        });
+        
+        const senderLabel = msg.sender === 'support' ? '<strong>Support:</strong> ' : '<strong>Customer:</strong> ';
+        
+        return `
+          <div class="message ${msg.sender}">
+            <div class="message-bubble">
+              ${senderLabel}${msg.message}
+              <div class="message-time">${dateString} ${timeString}</div>
+            </div>
+          </div>
+        `;
+      }).join('');
+      messagesArea.scrollTop = messagesArea.scrollHeight;
+    }
+
+    async function sendReply() {
+      const input = document.getElementById('replyInput');
+      const message = input.value.trim();
+      
+      if (!message || !currentUserId) return;
+
+      const sendBtn = document.getElementById('sendBtn');
+      sendBtn.disabled = true;
+      sendBtn.textContent = 'Sending...';
+
+      try {
+        const response = await fetch(`${SUPABASE_URL}/rest/v1/support_messages`, {
+          method: 'POST',
+          headers: {
+            'apikey': SUPABASE_ANON_KEY,
+            'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+            'Content-Type': 'application/json',
+            'Prefer': 'return=representation'
+          },
+          body: JSON.stringify({
+            user_id: currentUserId,
+            message: message,
+            sender: 'support'
+          })
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to send message');
+        }
+
+        const data = await response.json();
+        conversations[currentUserId].messages.push(data[0]);
+        renderMessages(conversations[currentUserId].messages);
+        input.value = '';
+      } catch (error) {
+        alert('Error sending message: ' + error.message);
+      } finally {
+        sendBtn.disabled = false;
+        sendBtn.textContent = 'Send';
+      }
+    }
+
+    document.getElementById('sendBtn').addEventListener('click', sendReply);
+    document.getElementById('replyInput').addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') sendReply();
+    });
+
+    // Load conversations on start
+    loadConversations();
+
+    // Refresh every 5 seconds
+    setInterval(loadConversations, 5000);
+  </script>
+</body>
+</html>

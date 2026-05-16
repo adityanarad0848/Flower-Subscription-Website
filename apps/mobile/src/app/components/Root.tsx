@@ -40,10 +40,16 @@ export default function Root() {
     return <SplashScreen onComplete={() => setShowSplash(false)} />;
   }
 
+  // Hide header on auth pages and address-map when coming from auth
+  const hideHeader = location.pathname === '/auth' || 
+                     location.pathname === '/auth/phone' || 
+                     location.pathname === '/auth/callback' ||
+                     (location.pathname === '/address-map' && location.search.includes('from=auth'));
+
   return (
     <CartProvider>
       <div className="flex flex-col min-h-screen">
-        <Header />
+        {!hideHeader && <Header />}
         <main className="flex-1">
           <Outlet />
         </main>

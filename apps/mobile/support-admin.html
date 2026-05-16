@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mornify Support Admin</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f5f5f5; }
+    .container { max-width: 1200px; margin: 0 auto; padding: 20px; }
+    .header { background: linear-gradient(135deg, #ff6b6b, #ff8e53); color: white; padding: 20px; border-radius: 12px; margin-bottom: 20px; }
+    .conversations { display: grid; grid-template-columns: 300px 1fr; gap: 20px; }
+    .users-list { background: white; border-radius: 12px; padding: 15px; height: calc(100vh - 200px); overflow-y: auto; }
+    .user-item { padding: 12px; border-radius: 8px; cursor: pointer; margin-bottom: 8px; border: 1px solid #e0e0e0; }
+    .user-item:hover { background: #f9f9f9; }
+    .user-item.active { background: #fff3e0; border-color: #ff6b6b; }
+    .chat-area { background: white; border-radius: 12px; padding: 20px; height: calc(100vh - 200px); display: flex; flex-direction: column; }
+    .messages { flex: 1; overflow-y: auto; margin-bottom: 20px; }
+    .message { margin-bottom: 15px; }
+    .message.user { text-align: right; }
+    .message-bubble { display: inline-block; padding: 10px 15px; border-radius: 12px; max-width: 70%; }
+    .message.user .message-bubble { background: #ff6b6b; color: white; }
+    .message.support .message-bubble { background: #f0f0f0; color: #333; }
+    .message-time { font-size: 11px; color: #999; margin-top: 4px; }
+    .reply-box { display: flex; gap: 10px; }
+    .reply-box input { flex: 1; padding: 12px; border: 1px solid #ddd; border-radius: 24px; outline: none; }
+    .reply-box button { padding: 12px 24px; background: linear-gradient(135deg, #ff6b6b, #ff8e53); color: white; border: none; border-radius: 24px; cursor: pointer; font-weight: 600; }
+    .reply-box button:hover { opacity: 0.9; }
+    .user-name { font-weight: 600; color: #333; }
+    .user-phone { font-size: 12px; color: #666; margin-top: 2px; }
+    .unread-badge { background: #ff6b6b; color: white; padding: 2px 8px; border-radius: 12px; font-size: 11px; float: right; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>🌺 Mornify Support Admin</h1>
+      <p>Manage customer support conversations</p>
+    </div>
+    
+    <div class="conversations">
+      <div class="users-list" id="usersList">
+        <p style="text-align: center; color: #999;">Loading conversations...</p>
+      </div>
+      
+      <div class="chat-area">
+        <div id="chatHeader" style="margin-bottom: 15px; padding-bottom: 15px; border-bottom: 2px solid #f0f0f0;">
+          <p style="color: #999;">Select a conversation to start</p>
+        </div>
+        <div class="messages" id="messagesArea"></div>
+        <div class="reply-box">
+          <input type="text" id="replyInput" placeholder="Type your reply..." disabled>
+          <button id="sendBtn" disabled>Send</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Initialize Supabase
+    const SUPABASE_URL = 'https://dzytzztohlvjwdsfhoua.supabase.co';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImR6eXR6enRvaGx2andkc2Zob3VhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzEwMDExNTYsImV4cCI6MjA4NjU3NzE1Nn0.x15xhhR1a3yl0zbxp3BqTpxLOInldOD76Xlt-RLRxwY';
+    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    let currentUserId = null;
+    let conversations = {};
+
+    async function loadConversations() {
+      try {
+        console.log('Loading conversations...');
+        const { data, error } = await supabase
+          .from('support_messages')
+          .select('*')
+          .order('created_at', { ascending: false });
+
+        console.log('Data:', data);
+        console.log('Error:', error);
+
+        if (error) {
+          document.getElementById('usersList').innerHTML = `
+            <div style="padding: 20px; text-align: center;">
+              <p style="color: red; margin-bottom: 10px;">Error loading messages:</p>
+              <p style="color: #666; font-size: 12px;">${error.message}</p>
+              <p style="color: #999; font-size: 11px; margin-top: 10px;">Check RLS policies in Supabase</p>
+            </div>
+          `;
+          return;
+        }
+
+        if (!data || data.length === 0) {
+          document.getElementById('usersList').innerHTML = `
+            <p style="text-align: center; color: #999; padding: 20px;">No messages yet. Send a test message from the app!</p>
+          `;
+          return;
+        }
+
+        // Group by user_id
+        conversations = {};
+        data.forEach(msg => {
+          if (!conversations[msg.user_id]) {
+            conversations[msg.user_id] = {
+              userId: msg.user_id,
+              userName: msg.user_name || 'User',
+              userPhone: msg.user_phone || '',
+              userEmail: msg.user_email || '',
+              messages: [],
+              lastMessage: msg.created_at
+            };
+          }
+          conversations[msg.user_id].messages.push(msg);
+        });
+
+        console.log('Conversations:', conversations);
+        renderUsersList();
+      } catch (err) {
+        console.error('Load error:', err);
+        document.getElementById('usersList').innerHTML = `
+          <p style="text-align: center; color: red; padding: 20px;">Error: ${err.message}</p>
+        `;
+      }
+    }
+
+    function renderUsersList() {
+      const usersList = document.getElementById('usersList');
+      const users = Object.values(conversations).sort((a, b) => 
+        new Date(b.lastMessage) - new Date(a.lastMessage)
+      );
+
+      usersList.innerHTML = users.map(user => `
+        <div class="user-item" onclick="selectUser('${user.userId}')">
+          <div class="user-name">${user.userName}</div>
+          <div class="user-phone">${user.userPhone}</div>
+        </div>
+      `).join('');
+    }
+
+    function selectUser(userId) {
+      currentUserId = userId;
+      const user = conversations[userId];
+      
+      // Update active state
+      document.querySelectorAll('.user-item').forEach(el => el.classList.remove('active'));
+      event.target.closest('.user-item').classList.add('active');
+
+      // Update chat header
+      document.getElementById('chatHeader').innerHTML = `
+        <div class="user-name">${user.userName}</div>
+        <div class="user-phone">${user.userPhone}</div>
+      `;
+
+      // Render messages
+      renderMessages(user.messages);
+
+      // Enable reply
+      document.getElementById('replyInput').disabled = false;
+      document.getElementById('sendBtn').disabled = false;
+    }
+
+    function renderMessages(messages) {
+      const messagesArea = document.getElementById('messagesArea');
+      messagesArea.innerHTML = messages.map(msg => `
+        <div class="message ${msg.sender}">
+          <div class="message-bubble">
+            ${msg.message}
+            <div class="message-time">${new Date(msg.created_at).toLocaleString()}</div>
+          </div>
+        </div>
+      `).join('');
+      messagesArea.scrollTop = messagesArea.scrollHeight;
+    }
+
+    async function sendReply() {
+      const input = document.getElementById('replyInput');
+      const message = input.value.trim();
+      
+      if (!message || !currentUserId) return;
+
+      const { data } = await supabase.from('support_messages').insert({
+        user_id: currentUserId,
+        message: message,
+        sender: 'support'
+      }).select().single();
+
+      if (data) {
+        conversations[currentUserId].messages.push(data);
+        renderMessages(conversations[currentUserId].messages);
+        input.value = '';
+      }
+    }
+
+    document.getElementById('sendBtn').addEventListener('click', sendReply);
+    document.getElementById('replyInput').addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') sendReply();
+    });
+
+    // Load conversations on start
+    loadConversations();
+
+    // Refresh every 5 seconds
+    setInterval(loadConversations, 5000);
+  </script>
+</body>
+</html>

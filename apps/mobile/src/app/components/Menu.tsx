@@ -1,6 +1,8 @@
 import { useNavigate } from "react-router";
-import { ArrowLeft, Home, Info, HelpCircle, Mail, Truck, FileText, User } from "lucide-react";
+import { ArrowLeft, Home, Info, HelpCircle, Mail, Truck, FileText, User, MessageCircle } from "lucide-react";
 import { useAuth } from "@/app/context/auth";
+import { supabase } from "@/lib/supabase";
+import { useState, useEffect } from "react";
 
 export function Menu() {
   const navigate = useNavigate();
@@ -14,20 +16,28 @@ export function Menu() {
 
   const supportItems = [
     { path: "/faq", label: "FAQ", icon: HelpCircle },
-    { path: "/contact", label: "Contact Us", icon: Mail },
+    { path: "/support", label: "Live Support", icon: MessageCircle },
     { path: "/delivery-info", label: "Delivery Info", icon: Truck },
     { path: "/terms", label: "Terms & Conditions", icon: FileText },
   ];
 
-  // Get user display name from various possible fields
-  const getUserDisplayName = () => {
-    if (!user) return 'User';
-    return user.user_metadata?.full_name || 
-           user.user_metadata?.name || 
-           user.user_metadata?.display_name ||
-           user.email?.split('@')[0] || 
-           'User';
-  };
+  // Get user display name from user_profiles table
+  const [profileName, setProfileName] = useState('User');
+
+  useEffect(() => {
+    if (user) {
+      supabase
+        .from('user_profiles')
+        .select('full_name')
+        .eq('user_id', user.id)
+        .single()
+        .then(({ data }) => {
+          if (data?.full_name) {
+            setProfileName(data.full_name);
+          }
+        });
+    }
+  }, [user]);
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -46,14 +56,29 @@ export function Menu() {
         {user && (
           <div className="bg-white rounded-xl p-4 shadow-sm">
             <div className="flex items-center gap-3">
-              <div className="w-16 h-16 rounded-full bg-gradient-to-br from-orange-500 to-pink-600 text-white font-bold text-2xl flex items-center justify-center shadow-lg">
-                {(user.user_metadata?.full_name ?? user.email ?? 'U')[0].toUpperCase()}
+              <div className="w-16 h-16 rounded-full bg-gradient-to-br from-orange-500 to-pink-600 text-white font-bold text-xl flex items-center justify-center shadow-lg">
+                {(() => {
+                  try {
+                    // Get initials from profile name (first and last name)
+                    const nameParts = profileName.trim().split(/\s+/);
+                    if (nameParts.length >= 2) {
+                      // First and last name initials
+                      return (nameParts[0][0] + nameParts[nameParts.length - 1][0]).toUpperCase();
+                    } else if (nameParts.length === 1 && nameParts[0]) {
+                      // Single name - first letter only
+                      return nameParts[0][0].toUpperCase();
+                    }
+                    return 'U';
+                  } catch (e) {
+                    return 'U';
+                  }
+                })()}
               </div>
               <div className="flex-1 min-w-0">
                 <p className="font-bold text-lg text-gray-900 truncate">
-                  {getUserDisplayName()}
+                  {profileName}
                 </p>
-                <p className="text-sm text-gray-500 truncate">{user.email}</p>
+                <p className="text-sm text-gray-500 truncate">{user.phone || user.email}</p>
               </div>
             </div>
           </div>

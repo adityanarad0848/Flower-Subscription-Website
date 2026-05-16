@@ -245,6 +245,7 @@ export default function DesktopLanding() {
               <ul className="space-y-2 text-gray-400">
                 <li><button onClick={() => navigate('/faq')} className="hover:text-white">FAQ</button></li>
                 <li><button onClick={() => navigate('/contact')} className="hover:text-white">Contact Us</button></li>
+                <li><button onClick={() => navigate('/privacy')} className="hover:text-white">Privacy Policy</button></li>
                 <li><button onClick={() => navigate('/terms')} className="hover:text-white">Terms & Conditions</button></li>
               </ul>
             </div>

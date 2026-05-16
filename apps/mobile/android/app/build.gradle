@@ -52,6 +52,9 @@ dependencies {
     // Native-like experience with Chrome Custom Tabs
     implementation 'com.google.android.material:material:1.9.0'
     implementation 'androidx.browser:browser:1.8.0'
+    
+    // Razorpay Android SDK
+    implementation 'com.razorpay:checkout:1.6.40'
 }
 
 apply from: 'capacitor.build.gradle'
