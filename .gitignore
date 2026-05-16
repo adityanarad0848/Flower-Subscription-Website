@@ -1,1 +1,3 @@
 node_modules
+apps/mobile/.env
+apps/mobile/android/backend/.env
